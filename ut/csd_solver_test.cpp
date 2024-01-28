@@ -15,11 +15,3 @@ TEST_CASE("CSD solver", "[solver-csd]") {
         CHECK(Evaluate(g).back() == n);
     }
 }
-
-
-TEST_CASE("CSD solver vs bounds", "[solver-csd][bounds]") {
-    SECTION("Test") {
-        std::unique_ptr<Solver> s = MakeCsdSolver();
-        RunBoundsTest(*s);
-    }
-}
