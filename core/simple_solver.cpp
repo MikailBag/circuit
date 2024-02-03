@@ -18,8 +18,7 @@ public:
     Graph Solve(std::span<uint64_t> rawTargets) override {
         std::vector<uint64_t> targets {rawTargets.begin(), rawTargets.end()};
         std::sort(targets.begin(), targets.end(), [](uint64_t a, uint64_t b) {
-            return a < b;
-            //return MinAdderDepth(a) < MinAdderDepth(b);
+            return MinAdderDepth(a) < MinAdderDepth(b);
         });
         SimpleBuilder b;
         std::vector<uint64_t> parts; // TODO: use NOFs too

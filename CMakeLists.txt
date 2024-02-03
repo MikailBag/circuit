@@ -4,7 +4,7 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 project(Circuit)
 
-find_package(Catch2 3 REQUIRED)
+find_package(Catch2 3 CONFIG REQUIRED)
 
 add_library(Argv STATIC)
 target_include_directories(Argv PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/pkg/argv/include)
@@ -13,15 +13,13 @@ target_sources(Argv PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/pkg/argv/argv.cpp)
 add_library(Log STATIC)
 target_include_directories(Log PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/pkg/log/include)
 target_sources(Log PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/pkg/log/log.cpp)
-target_compile_features(Log PUBLIC cxx_constexpr)
-target_compile_features(Log PUBLIC cxx_std_20) # inline constexpr variable
+target_compile_features(Log PUBLIC cxx_std_20)
 
 add_library(Core STATIC)
 target_compile_options(Core PRIVATE ${BUILD_FLAGS})
 target_link_libraries(Core PRIVATE Log)
 target_include_directories(Core PUBLIC core)
-target_compile_features(Core PUBLIC cxx_attributes) # [[maybe_uninit]]
-target_compile_features(Core PUBLIC cxx_std_20) # std::span
+target_compile_features(Core PUBLIC cxx_std_20)
 target_sources(Core PRIVATE core/graph.cpp core/graph_builder.cpp)
 target_sources(Core PRIVATE core/simple_builder.cpp)
 target_sources(Core PRIVATE core/testk.cpp)
