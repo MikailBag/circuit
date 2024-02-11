@@ -1,10 +1,14 @@
-#include "argv.h"
+#include "argparser.h"
 
 #include <cstdlib>
 #include <iostream>
+#include <set>
+#include <stdexcept>
 #include <string_view>
 
-static bool StartsWith(std::string_view s, std::string_view prefix) {
+namespace argparser {
+namespace {
+bool StartsWith(std::string_view s, std::string_view prefix) {
     if (s.size() < prefix.size()) {
         return false;
     }
@@ -16,22 +20,101 @@ static bool StartsWith(std::string_view s, std::string_view prefix) {
     return true;
 }
 
-std::map<std::string, std::string> ParseArgv(size_t argc, char const* const* argv) {
-    if (argc <= 1) {
-        return {};
+[[noreturn]] void Die(std::string_view message)  {
+    std::cerr << "Error: " << message << std::endl;
+    exit(1);
+}
+}
+
+struct OptionData {
+    bool required;
+};
+
+namespace detail {
+class Access {
+public:
+    static Option MakeOption();
+    static std::map<std::string, std::string> Parse(ParserConfig const& config, size_t argc, char const* const* argv);
+    static OptionData const& UnpackOpt(Option const& opt);
+};
+}
+using detail::Access;
+
+struct Option::Impl {
+    OptionData data;
+};
+
+Option::Option(std::unique_ptr<Impl>&& impl)
+    : mImpl(std::move(impl)) {
     }
-    std::map<std::string, std::string> res;
-    for (size_t i = 1; i < argc; i += 2) {
-        std::string_view key = argv[i];
-        if (i+1 == argc) {
-            std::cerr << "no value for key\n";
-            exit(1);
+
+Option& Option::Required() {
+    mImpl->data.required = true;
+    return *this;
+}
+
+Option::~Option() = default;
+
+class ParserConfig::Impl {
+public:
+    std::map<std::string, std::string> Parse(size_t argc, char const* const* argv) const {
+        std::map<std::string, std::string> res;
+        for (size_t i = 1; i < argc; i += 2) {
+            std::string_view flag = argv[i];
+            if (i+1 == argc) {
+                Die("no value for key");
+            }
+            if (!StartsWith(flag, "--") || flag.size() == 2) {
+                Die("invalid option " + std::string(flag));
+            }
+            auto key = std::string(flag.substr(2));
+            if (!mOpts.contains(key)) {
+                Die("unknown option " + std::string(key));
+            }
+            res[key] = argv[i+1];
         }
-        if (!StartsWith(key, "--") || key.size() == 2) {
-            std::cerr << "invalid option " << key << '\n';
-            exit(1);
+        for (auto const& [k, opt] : mOpts) {
+            if (Access::UnpackOpt(opt).required && !res.contains(k)) {
+                Die("missing required option " + k);
+            }
         }
-        res[std::string(key.substr(2))] = argv[i+1];
+        return res;
     }
-    return res;
+
+    Option& AddOption(std::string_view name) {
+        Option opt = Access::MakeOption();//
+        auto [it, inserted] = mOpts.insert(std::pair<std::string, Option>{std::string(name), std::move(opt)});
+        if (!inserted) {
+            throw std::invalid_argument("name already used");
+        }
+        return it->second;
+    }
+private:
+    std::map<std::string, Option> mOpts;
+};
+
+ParserConfig::ParserConfig(): mImpl(std::unique_ptr<Impl>(new Impl)) {}
+
+ParserConfig::~ParserConfig() = default;
+
+Option& ParserConfig::AddOption(std::string_view name) {
+    return mImpl->AddOption(name); 
+}
+
+Option Access::MakeOption() {
+    std::unique_ptr<Option::Impl> impl{new Option::Impl()};
+    return Option{std::move(impl)};
+}
+
+OptionData const& Access::UnpackOpt(Option const& opt) {
+    return opt.mImpl->data;
+}
+
+std::map<std::string, std::string> Access::Parse(ParserConfig const& config, size_t argc, char const* const* argv) {
+    return config.mImpl->Parse(argc, argv);
+}
+
+std::map<std::string, std::string> ParseArgv(ParserConfig const& config, size_t argc, char const* const* argv) {
+    return Access::Parse(config, argc, argv);
+}
 }

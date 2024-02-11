@@ -12,6 +12,8 @@ struct CanonicalSignedDigitRepresentation {
     };
 
     Kind Classify(uint8_t bit);
+
+    uint8_t PopCount();
 };
 
 CanonicalSignedDigitRepresentation EncodeCsd(uint64_t x);

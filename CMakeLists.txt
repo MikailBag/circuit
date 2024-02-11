@@ -6,9 +6,10 @@ project(Circuit)
 
 find_package(Catch2 3 CONFIG REQUIRED)
 
-add_library(Argv STATIC)
-target_include_directories(Argv PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/pkg/argv/include)
-target_sources(Argv PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/pkg/argv/argv.cpp)
+add_library(ArgParser STATIC)
+target_include_directories(ArgParser PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/pkg/argv/include)
+target_sources(ArgParser PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/pkg/argv/argv.cpp)
+target_compile_features(ArgParser PUBLIC cxx_std_20)
 
 add_library(Log STATIC)
 target_include_directories(Log PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/pkg/log/include)
@@ -28,16 +29,19 @@ target_sources(Core PRIVATE core/solver.cpp core/all_solvers.cpp)
 target_sources(Core PRIVATE core/csd.cpp core/csd_solver.cpp)
 target_sources(Core PRIVATE core/simple_solver.cpp)
 
-add_executable(M core/main.cpp)
+add_executable(M bin/main.cpp)
 target_link_libraries(M PRIVATE Core)
 
 add_executable(TotalTopologyCount bin/total_topology_count.cpp)
 
 add_executable(Runner bin/runner.cpp)
-target_link_libraries(Runner PRIVATE Core Argv)
+target_link_libraries(Runner PRIVATE Core ArgParser)
 
 add_executable(Bench bin/bench.cpp)
 target_link_libraries(Bench PRIVATE Core)
+
+add_executable(FindAllOutputs bin/find_all_outputs.cpp)
+target_link_libraries(FindAllOutputs PRIVATE Core ArgParser)
 
 add_executable(Test ut/graph_test.cpp ut/csd_test.cpp ut/csd_solver_test.cpp ut/simple_builder_test.cpp)
 #target_sources(ut PRIVATE ut/testk_test.cpp)

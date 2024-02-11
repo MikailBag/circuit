@@ -1,4 +1,4 @@
-#include <argv.h>
+#include <argparser.h>
 #include <solver.h>
 #include <csd_solver.h>
 
@@ -8,7 +8,9 @@
 
 
 int main(int argc, char** argv) {
-    std::map<std::string, std::string> opts = ParseArgv(argc, argv);
+    argparser::ParserConfig pc;
+    pc.AddOption("target").Required();
+    std::map<std::string, std::string> opts = ParseArgv(pc, argc, argv);
     uint64_t x = std::stoi(opts["target"]);
     Graph g = MakeGraphUsingCsd(x);
     if (Evaluate(g).back() != x) {

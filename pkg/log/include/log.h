@@ -3,6 +3,7 @@
 #include <vector>
 #include <utility>
 #include <variant>
+#include <cstdint>
 
 inline constexpr bool kDisableAllLogs = false;
 
