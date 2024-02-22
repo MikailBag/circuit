@@ -1,0 +1,14 @@
+#include "find_all_outputs.h"
+
+
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
+
+
+TEST_CASE("Canonical signle digit encoder", "[find-all-outputs]") {
+    Params p;
+    p.explicitNodeCountLimit = 3;
+    std::vector<Graph> out;
+    FindAllTopologies(p, out);
+    CHECK(out.size() == 1);
+}

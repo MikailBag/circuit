@@ -12,6 +12,6 @@ TEST_CASE("CSD solver", "[solver-csd]") {
     SECTION("Is correct") {
         uint64_t n = GENERATE(37, 147, 15, 11, 415);
         Graph g = MakeGraphUsingCsd(n);
-        CHECK(Evaluate(g).back() == n);
+        CHECK(Evaluate1D(g).back() == n);
     }
 }

@@ -106,7 +106,6 @@ struct BuildState {
         L().AttrI64("initialValue", curValue).AttrU64("index", cur).Log("Processed initial dependency");
         bool curNegated = node.deps[0].sign == SimpleBuilder::Sign::NEGATIVE;
         uint8_t shift = node.deps[0].shift;
-        //assert(g.NodeCount() == outputs.size());
         for (size_t j = 1; j < node.deps.size(); ++j) {
             L()
                 .AttrU64("depIndex", j)

@@ -21,7 +21,7 @@ static uint64_t RunSolverOnTest(Solver& s, Test const& t) {
 
     Graph g = s.Solve({goalVec.data(), goalVec.size()});
 
-    auto f = Evaluate(g);
+    auto f = Evaluate1D(g);
     for (auto x : f) {
         goal.erase(x);
     }

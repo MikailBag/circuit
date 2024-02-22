@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
     std::map<std::string, std::string> opts = ParseArgv(pc, argc, argv);
     uint64_t x = std::stoi(opts["target"]);
     Graph g = MakeGraphUsingCsd(x);
-    if (Evaluate(g).back() != x) {
+    if (Evaluate1D(g).back() != x) {
         std::cerr << "Internal error\n";
         exit(1);
     }

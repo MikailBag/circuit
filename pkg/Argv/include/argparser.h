@@ -14,6 +14,7 @@ public:
     Option(Option&&) = default;
     Option& operator=(Option&&) = default;
     Option& Required();
+    Option& DefaultValue(std::string_view dfl);
     ~Option();
 private:
     struct Impl;

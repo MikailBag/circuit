@@ -43,13 +43,27 @@ bool Link::IsNegated() const {
     return shiftWithSign & kShiftSignBit;
 }
 
+Link Link::OfAdd(size_t i, uint8_t shift) {
+    Link l;
+    l.index = i;
+    l.shiftWithSign = shift;
+    return l;
+}
+
+Link Link::OfSub(size_t i, uint8_t shift) {
+    Link l;
+    l.index = i;
+    l.shiftWithSign = shift | kShiftSignBit;
+    return l;
+}
+
 static constexpr uint8_t kRestoreShiftMark = 0x7f;
 
 uint8_t Link::Shift() const {
     return shiftWithSign & kRestoreShiftMark;
 }
 
-std::vector<uint32_t> Evaluate(Graph const& g) {
+std::vector<uint32_t> Evaluate1D(Graph const& g) {
     std::vector<uint32_t> out;
     out.reserve(g.nodes.size() + 1);
     out.push_back(1);

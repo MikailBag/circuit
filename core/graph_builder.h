@@ -16,12 +16,14 @@ public:
         bool mShiftSet;
     };
     GraphBuilder Add(LinkB left, LinkB right) && {
-        AddNode(left, right, true);
+        AddNodeCommon(left, right);
+        mG.nodes.emplace_back(Link::OfAdd(left.mIdx, left.mShift), Link::OfAdd(right.mIdx, right.mShift));
         return std::move(*this);
     }
 
     GraphBuilder Sub(LinkB left, LinkB right) && {
-        AddNode(left, right, false);
+        AddNodeCommon(left, right);
+        mG.nodes.emplace_back(Link::OfAdd(left.mIdx, left.mShift), Link::OfSub(right.mIdx, right.mShift));
         return std::move(*this);
     }
     size_t NodeCount() const {
@@ -33,6 +35,7 @@ public:
     }
 
 private:
+    void AddNodeCommon(LinkB const& left, LinkB const& right);
     void AddNode(LinkB left, LinkB right, bool add);
     Graph mG;
 };

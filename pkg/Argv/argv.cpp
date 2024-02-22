@@ -5,6 +5,7 @@
 #include <set>
 #include <stdexcept>
 #include <string_view>
+#include <optional>
 
 namespace argparser {
 namespace {
@@ -28,6 +29,7 @@ bool StartsWith(std::string_view s, std::string_view prefix) {
 
 struct OptionData {
     bool required;
+    std::optional<std::string> defaultValue;
 };
 
 namespace detail {
@@ -42,6 +44,12 @@ using detail::Access;
 
 struct Option::Impl {
     OptionData data;
+
+    void Validate() {
+        if (data.required && data.defaultValue.has_value()) {
+            throw std::invalid_argument("Required() and DefaultValue() are conflicting");
+        }
+    }
 };
 
 Option::Option(std::unique_ptr<Impl>&& impl)
@@ -50,6 +58,13 @@ Option::Option(std::unique_ptr<Impl>&& impl)
 
 Option& Option::Required() {
     mImpl->data.required = true;
+    mImpl->Validate();
+    return *this;
+}
+
+Option& Option::DefaultValue(std::string_view dfl) {
+    mImpl->data.defaultValue = dfl;
+    mImpl->Validate();
     return *this;
 }
 
@@ -74,9 +89,14 @@ public:
             res[key] = argv[i+1];
         }
         for (auto const& [k, opt] : mOpts) {
-            if (Access::UnpackOpt(opt).required && !res.contains(k)) {
-                Die("missing required option " + k);
-            }
+            if (!res.contains(k)) {
+                if (Access::UnpackOpt(opt).required) {
+                    Die("missing required option " + k);
+                }
+                if (Access::UnpackOpt(opt).defaultValue) {
+                    res[k] = *Access::UnpackOpt(opt).defaultValue;
+                }
+            }   
         }
         return res;
     }

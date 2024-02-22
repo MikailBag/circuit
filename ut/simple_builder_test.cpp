@@ -17,7 +17,7 @@ TEST_CASE("Simple builder", "[builder-simple]") {
         };
         b.Add(std::move(deps));
         Graph g = std::move(b).Finish();
-        CHECK(Evaluate(g).back() == 37);
+        CHECK(Evaluate1D(g).back() == 37);
     }
     SECTION("Is correct [N=33]") {
         SimpleBuilder b;
@@ -27,7 +27,7 @@ TEST_CASE("Simple builder", "[builder-simple]") {
         };
         b.Add(std::move(deps));
         Graph g = std::move(b).Finish();
-        CHECK(Evaluate(g).back() == 33);
+        CHECK(Evaluate1D(g).back() == 33);
     }
 
     SECTION("Is correct [N=5]") {
@@ -38,6 +38,6 @@ TEST_CASE("Simple builder", "[builder-simple]") {
         };
         b.Add(std::move(deps));
         Graph g = std::move(b).Finish();
-        CHECK(Evaluate(g).back() == 5);
+        CHECK(Evaluate1D(g).back() == 5);
     }
 }
