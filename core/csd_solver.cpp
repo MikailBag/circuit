@@ -36,7 +36,7 @@ Graph MakeGraphUsingCsd(uint64_t x) {
     }
     g.Add(std::move(deps));
     auto res = std::move(g).Finish();
-    assert(res.IsValid());
+    assert(res.IsValid(1));
     return res;
 }
 
@@ -46,7 +46,7 @@ public:
     Graph Solve(std::span<uint64_t> x) override {
         auto g = MakeGraphUsingCsd(x[0]);
         for (size_t i = 1; i < x.size(); ++i) {
-            g = Graph::Merge(std::move(g), MakeGraphUsingCsd(x[i]));
+            g = Graph::Merge(1, std::move(g), MakeGraphUsingCsd(x[i]));
         }
         return g;
     }

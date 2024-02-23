@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+set(CMAKE_SUPPRESS_REGENERATION ON)
 
 project(Circuit)
 
@@ -16,8 +17,12 @@ target_include_directories(Log PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/pkg/Log/includ
 target_sources(Log PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/pkg/Log/log.cpp)
 target_compile_features(Log PUBLIC cxx_std_20)
 
+add_library(ArrayVec STATIC)
+target_include_directories(ArrayVec PUBLIC pkg/ArrayVec/include)
+target_sources(ArrayVec PRIVATE pkg/ArrayVec/arrayvec.cpp)
+target_compile_features(ArrayVec PUBLIC cxx_std_20)
+
 add_library(Core STATIC)
-#target_compile_options(Core PRIVATE ${BUILD_FLAGS})
 target_link_libraries(Core PRIVATE Log)
 target_include_directories(Core PUBLIC core)
 target_compile_features(Core PUBLIC cxx_std_20)
@@ -30,15 +35,13 @@ target_sources(Core PRIVATE core/csd.cpp core/csd_solver.cpp)
 target_sources(Core PRIVATE core/simple_solver.cpp)
 
 add_library(FindAllOutputsLib STATIC)
-target_include_directories(FindAllOutputsLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/pkg/FindAllOutputs/include)
-target_link_libraries(FindAllOutputsLib PUBLIC Core)
+target_include_directories(FindAllOutputsLib PUBLIC pkg/FindAllOutputs/include pkg/FindAllOutputs)
+target_link_libraries(FindAllOutputsLib PUBLIC Core ArrayVec)
 target_compile_features(FindAllOutputsLib PUBLIC cxx_std_20)
 target_sources(FindAllOutputsLib PRIVATE pkg/FindAllOutputs/find_all_outputs.cpp)
 
 add_executable(M bin/main.cpp)
 target_link_libraries(M PRIVATE Core)
-
-add_executable(TotalTopologyCount bin/total_topology_count.cpp)
 
 add_executable(Runner bin/runner.cpp)
 target_link_libraries(Runner PRIVATE Core ArgParser)

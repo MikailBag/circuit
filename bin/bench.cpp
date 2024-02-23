@@ -38,7 +38,7 @@ static uint64_t RunSolverOnTest(Solver& s, Test const& t) {
         std::cout << '\n';
         return kFail; 
     }
-    return g.NodeCount();
+    return g.ExplicitNodeCount();
 }
 
 static void RunTest(std::vector<std::unique_ptr<Solver>> const& solvers, Test const& t) {

@@ -271,6 +271,6 @@ auto SimpleBuilder::Finish() && -> Graph {
         st.Append(std::move(n));
     }
     Graph result = std::move(st.g).Build();
-    assert(result.IsValid());
+    assert(result.IsValid(1));
     return result;
 }

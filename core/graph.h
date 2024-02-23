@@ -34,10 +34,10 @@ struct Graph {
     Graph(Graph&&) = default;
     Graph& operator=(Graph&&) = default;
     
-    static Graph Merge(Graph lhs, Graph const& rhs);
-    bool IsValid() const;
-    size_t NodeCount() const {
-        return nodes.size() + 1;
+    static Graph Merge(size_t inputCount, Graph lhs, Graph const& rhs);
+    bool IsValid(size_t inputCount) const;
+    size_t ExplicitNodeCount() const {
+        return nodes.size();
     }
 };
 

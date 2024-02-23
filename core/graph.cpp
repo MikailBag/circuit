@@ -120,9 +120,10 @@ std::vector<std::string> Describe(Graph const& g) {
     return out;
 }
 
-Graph Graph::Merge(Graph lhs, Graph const& rhs) {
-    assert(lhs.IsValid());
-    assert(rhs.IsValid());
+Graph Graph::Merge(size_t inputCount, Graph lhs, Graph const& rhs) {
+    assert(inputCount == 1); // TODO
+    assert(lhs.IsValid(inputCount));
+    assert(rhs.IsValid(inputCount));
     size_t lhsSz = lhs.nodes.size();
     // 0 - ONE
     // [1 .. lhsSz] - left nodes
@@ -139,13 +140,14 @@ Graph Graph::Merge(Graph lhs, Graph const& rhs) {
         gn.links[1].index = remapIndex(gn.links[1].index);
         lhs.nodes.push_back(gn);
     }
-    assert(lhs.IsValid());
+    assert(lhs.IsValid(inputCount));
     return lhs;
 }
 
-bool Graph::IsValid() const {
+bool Graph::IsValid(size_t inputCount) const {
     for (size_t i = 0; i < nodes.size(); ++i) {
-        if (nodes[i].links[0].index > i || nodes[i].links[1].index > i) {
+        size_t threshold = i + inputCount;
+        if (nodes[i].links[0].index >= threshold || nodes[i].links[1].index >= threshold) {
             return false;
         }
     }
