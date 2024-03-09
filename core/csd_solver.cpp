@@ -4,7 +4,7 @@
 
 #include "simple_builder.h"
 
-#include "log.h"
+#include "log/log.h"
 
 #include <cassert>
 

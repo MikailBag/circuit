@@ -2,7 +2,7 @@
 
 #include "graph.h"
 
-namespace find_all_outputs::detail {
+namespace bruteforce::detail {
 struct IsomorphismKey {};
 
 IsomorphismKey Get(Graph const& g);

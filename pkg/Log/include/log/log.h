@@ -7,7 +7,7 @@
 
 inline constexpr bool kDisableAllLogs = false;
 
-class LogEvent final {
+class [[nodiscard]] LogEvent final  {
     friend class Logger;
 public:
     LogEvent(LogEvent&&) = default;

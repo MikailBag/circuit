@@ -1,11 +1,18 @@
-#include "find_all_outputs.h"
+#include "bruteforce/find_all_outputs.h"
+
+#include "log/log.h"
 
 #include <stdexcept>
 #include <string>
 
 
-namespace find_all_outputs {
+
+
+namespace bruteforce {
 namespace {
+
+static Logger L = GetLogger("bf");
+
 void GoStep([[maybe_unused]] FindTopologyParams const& p, Topology const& g, std::vector<Topology>& out) {
     for (size_t i = 0; i < g.size() + kInCount; ++i) {
         for (size_t j = i; j < g.size() + kInCount; ++j) {
@@ -52,16 +59,25 @@ void Combine(std::vector<bool> const& lhs, std::vector<bool> const& rhs, std::ve
     }
 }
 
-void FindAllOutputsOfTopology([[maybe_unused]] Topology const& t, [[maybe_unused]] uint8_t bits, [[maybe_unused]] std::vector<bool>& ans, std::vector<std::vector<bool>> bufs) {
-    size_t n = 1 << static_cast<size_t>(bits);
+void FindAllOutputsOfTopology(Topology const& t, uint8_t bits, std::vector<bool>& ans, std::vector<std::vector<bool>> bufs) {
+    assert(bufs.size() >= t.size() + kInCount);
+    size_t maxVal = 1 << static_cast<size_t>(bits);
     for (size_t i = 0; i < t.size(); i++) {
-        bufs[i].assign(n, false);
+        bufs[i+kInCount].assign(maxVal, false);
     }
     for (size_t i = 0; i < t.size(); i++) {
         size_t lhsIdx = t[i].links[0];
         size_t rhsIdx = t[i].links[1];
-        Combine(bufs[lhsIdx], bufs[rhsIdx], bufs[i+2]);
-        PushShifts(bufs[i+2]);
+        L().AttrU64("lhs", lhsIdx).AttrU64("rhs", rhsIdx).Log("Processing node");
+        Combine(bufs[lhsIdx], bufs[rhsIdx], bufs[i+kInCount]);
+        PushShifts(bufs[i+kInCount]);
+    }
+    for (size_t i = 0; i < t.size() + kInCount; i++) {
+        for (size_t j = 0; j < maxVal; j++) {
+            if (bufs[i][j]) {
+                ans[j] = true;
+            }
+        }
     }
 }
 }
@@ -87,12 +103,13 @@ std::vector<uint64_t> FindAllOutputs([[maybe_unused]] FindOutputsParams const& p
     size_t maxNum = static_cast<size_t>(1) << static_cast<size_t>(p.bits);
     outs.resize(maxNum);
     std::vector<std::vector<bool>> bufs;
-    bufs.resize(kMaxExplicitNodeCount + 2);
+    bufs.resize(kMaxExplicitNodeCount + kInCount);
     bufs[0].assign(maxNum, false);
     bufs[0][0] = true;
     PushShifts(bufs[0]);
     bufs[1] = bufs[0];
     for (Topology const& t : topologies) {
+        L().AttrU64("nodeCount", t.size()).Log("Processing topology");
         FindAllOutputsOfTopology(t, p.bits, outs, bufs);
     }
     std::vector<uint64_t> ans;
@@ -101,6 +118,6 @@ std::vector<uint64_t> FindAllOutputs([[maybe_unused]] FindOutputsParams const& p
             ans.push_back(static_cast<uint64_t>(i));
         }
     }
-    throw std::runtime_error("TODO");
+    return ans;
 }
 }

@@ -2,7 +2,7 @@
 
 #include "graph_builder.h"
 
-#include "log.h"
+#include "log/log.h"
 
 #include <stdexcept>
 #include <string>

@@ -7,7 +7,7 @@
 
 #include <vector>
 
-namespace find_all_outputs {
+namespace bruteforce {
 
 inline constexpr size_t kInCount = 2;
 inline constexpr size_t kMaxExplicitNodeCount = 6;

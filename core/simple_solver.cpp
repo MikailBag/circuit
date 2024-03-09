@@ -3,7 +3,7 @@
 #include "min_adder_depth.h"
 #include "simple_builder.h"
 
-#include "log.h"
+#include "log/log.h"
 
 #include <algorithm>
 #include <string>

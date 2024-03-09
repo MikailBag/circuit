@@ -23,14 +23,18 @@ private:
             return buf;
         }
 
+        void const* Place() const {
+            return buf;
+        }
+
         T* Ptr() {
             void* bPtr = Place();
             return std::launder(reinterpret_cast<T*>(bPtr));
         }
 
         T const* Ptr( ) const {
-            void* bPtr = Place();
-            return std::launder(reinterpret_cast<T*>(bPtr));
+            void const* bPtr = Place();
+            return std::launder(reinterpret_cast<T const*>(bPtr));
         }
     };
     std::array<Slot, N> mSlots;
