@@ -5,7 +5,7 @@
 #include <catch2/generators/catch_generators.hpp>
 
 
-TEST_CASE("Canonical signle digit encoder", "[csd]") {
+TEST_CASE("Canonical single digit encoder", "[csd]") {
     uint64_t x = GENERATE(0, 5, 15, 16, 19, 31, 179, 287, 345, 1234567, 415);
 
     CanonicalSignedDigitRepresentation csd = EncodeCsd(x);

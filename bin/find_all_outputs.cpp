@@ -1,5 +1,5 @@
 #include "argparser/argparser.h"
-#include "bruteforce/find_all_outputs.h"
+#include "bruteforce/bruteforce.h"
 #include "graph.h"
 
 #include <string>

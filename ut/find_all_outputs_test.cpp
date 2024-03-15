@@ -1,4 +1,4 @@
-#include "bruteforce/find_all_outputs.h"
+#include "bruteforce/bruteforce.h"
 
 
 #include <catch2/catch_test_macros.hpp>
@@ -7,6 +7,10 @@
 #include <algorithm>
 #include <vector>
 
+#include <log/log.h>
+
+
+static Logger L = GetLogger("find-all-outputs-test");
 
 TEST_CASE("Canonical signle digit encoder", "[find-all-outputs]") {
     SECTION("Basic test") {
@@ -24,6 +28,9 @@ TEST_CASE("Canonical signle digit encoder", "[find-all-outputs]") {
         std::vector<bruteforce::Topology> tps;
         tps.push_back(bruteforce::Topology{});
         std::vector<uint64_t> outputs = bruteforce::FindAllOutputs(p, tps);
+        for (uint64_t x : outputs) {
+            L().AttrU64("num", x).Log("Output");
+        }
         CHECK(outputs.size() == 3);
         CHECK(std::find(outputs.begin(), outputs.end(), 1) != outputs.end());
         CHECK(std::find(outputs.begin(), outputs.end(), 2) != outputs.end());
