@@ -12,8 +12,11 @@ target_include_directories(ArgParser PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/pkg/Argv
 target_sources(ArgParser PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/pkg/Argv/argv.cpp)
 target_compile_features(ArgParser PUBLIC cxx_std_20)
 
+option(LOG_DISABLE "Disable all logging")
 add_library(Log STATIC)
-target_include_directories(Log PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/pkg/Log/include)
+target_include_directories(Log PUBLIC pkg/Log/include)
+configure_file(pkg/Log/config.h.in log-config/log-config.h)
+target_include_directories(Log PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/log-config)
 target_sources(Log PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/pkg/Log/log.cpp)
 target_compile_features(Log PUBLIC cxx_std_20)
 

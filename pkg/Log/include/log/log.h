@@ -5,7 +5,7 @@
 #include <variant>
 #include <cstdint>
 
-inline constexpr bool kDisableAllLogs = false;
+#include "log-config.h"
 
 class [[nodiscard]] LogEvent final  {
     friend class Logger;
