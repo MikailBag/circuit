@@ -24,17 +24,17 @@ private:
     friend class detail::Access;
 };
 
-class ParserConfig {
+class Parser {
 public:
-    ParserConfig();
+    Parser();
     Option& AddOption(std::string_view name);
-    ~ParserConfig();
+    std::map<std::string, std::string> ParseArgv(size_t argc, char const* const* argv) const;
+    ~Parser();
 private:
     class Impl;
     std::unique_ptr<Impl> mImpl;
     friend class detail::Access;
 };
 
-std::map<std::string, std::string> ParseArgv(ParserConfig const& config, size_t argc, char const* const* argv);
 
 }

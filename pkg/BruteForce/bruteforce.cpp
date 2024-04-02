@@ -1,9 +1,17 @@
 #include "bruteforce/bruteforce.h"
+#include "bruteforce/topology.h"
+
+#include "bitset.h"
+#include "eval_topology.h"
+#include "isomorphism_filter.h"
+#include "isomorphism_key.h"
 
 #include "log/log.h"
 
+#include <algorithm>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 
 
@@ -14,8 +22,8 @@ namespace {
 static Logger L = GetLogger("bf");
 
 void GoStep([[maybe_unused]] FindTopologyParams const& p, Topology const& g, std::vector<Topology>& out) {
-    for (size_t i = 0; i < g.size() + kInCount; ++i) {
-        for (size_t j = i; j < g.size() + kInCount; ++j) {
+    for (size_t i = 0; i < g.size() + p.inputCount; ++i) {
+        for (size_t j = i; j < g.size() + p.inputCount; ++j) {
             TopologyNode n;
             n.links[0] = i;
             n.links[1] = j;
@@ -32,58 +40,25 @@ void Go(FindTopologyParams const& p, std::vector<Topology> const& curLayer, std:
     }
 }
 
-void PushShifts(std::vector<bool>& v) {
-    size_t n = v.size();
-    for (size_t i = 0; 2*i < n; i++) {
-        if (v[i]) {
-            L().AttrU64("src", i).AttrU64("dst", 2*i).Log("Pushing");
-            v[2*i] = true;
-        }
+void ValidateFindOutputParams(FindOutputsParams const& p) {
+    if (p.maxExplicitNodeCount > kMaxExplicitNodeCount) {
+        throw std::invalid_argument("maxExplicitNodeCount is too big");
+    }
+    if (p.inputCount != 1 && p.inputCount != 2) {
+        throw std::invalid_argument("supported input count are 1 and 2");
     }
 }
 
-void Combine(std::vector<bool> const& lhs, std::vector<bool> const& rhs, std::vector<bool>& out) {
-    size_t n = lhs.size();
-    assert(n == rhs.size());
-    assert(n == out.size());
-    out.assign(n, false);
-    for (size_t i = 0; i < n; i++) {
-        if (!lhs[i]) {
-            continue;
-        }
-        for (size_t j = 0; i + j < n; j++) {
-            if (!rhs[j]) {
-                continue;
-            }
-            out[i+j] = true;
-        }
-    }
-}
 
-void FindTopologyOutputs(Topology const& t, uint8_t bits, std::vector<bool>& ans, std::vector<std::vector<bool>> bufs) {
-    assert(bufs.size() >= t.size() + kInCount);
-    size_t maxVal = 1 << static_cast<size_t>(bits);
-    for (size_t i = 0; i < t.size(); i++) {
-        bufs[i+kInCount].assign(maxVal+1, false);
-    }
-    for (size_t i = 0; i < t.size(); i++) {
-        size_t lhsIdx = t[i].links[0];
-        size_t rhsIdx = t[i].links[1];
-        L().AttrU64("lhs", lhsIdx).AttrU64("rhs", rhsIdx).Log("Processing node");
-        Combine(bufs[lhsIdx], bufs[rhsIdx], bufs[i+kInCount]);
-        PushShifts(bufs[i+kInCount]);
-    }
-    for (size_t i = 0; i < t.size() + kInCount; i++) {
-        for (size_t j = 0; j <= maxVal; j++) {
-            if (bufs[i][j]) {
-                ans[j] = true;
-            }
-        }
+void ValidateFindTopologyParams(FindTopologyParams const& p) {
+    if (p.inputCount != 1 && p.inputCount != 2) {
+        throw std::invalid_argument("supported input count are 1 and 2");
     }
 }
 }
 
 std::vector<Topology> FindAllTopologies(FindTopologyParams const& p) {
+    ValidateFindTopologyParams(p);
     std::vector<Topology> out;
     out.push_back(Topology{});
     std::vector<Topology> tmp;
@@ -95,30 +70,105 @@ std::vector<Topology> FindAllTopologies(FindTopologyParams const& p) {
     return out;
 }
 
-std::vector<Topology> FilterTopologies(std::vector<Topology> const& topologies) {
-    return topologies;
+std::vector<Topology> FilterTopologies(FilterParams const& p, std::vector<Topology> const& topologies) {
+    L().AttrU64("count", topologies.size()).Log("Filtering topologies");
+    std::vector<std::pair<iso::IsomorphismKey, size_t>> keys;
+    //keys.reserve(topologies.size());
+    for (size_t i = 0; i < topologies.size(); i++) {
+        keys.emplace_back(iso::Get(topologies[i], p.inputCount), i);
+    }
+    std::sort(keys.begin(), keys.end());
+    size_t groupCount = 0;
+    for (size_t i = 0; i < topologies.size(); i++) {
+        if (i == 0 || keys[i-1].first != keys[i].first) {
+            groupCount++;
+        }
+    }
+    L().AttrU64("count", groupCount).Log("Computed group keys");
+    std::vector<Topology> res;
+    size_t groupStart = 0;
+    for (size_t i = 0; i < topologies.size(); i++) {
+        if (i + 1 == topologies.size() || keys[i+1].first != keys[i].first) {
+            Topology const* first = &topologies[groupStart];
+            size_t cnt = i - groupStart + 1;
+            iso::FilterTopologies({first, cnt}, p, res);
+            groupStart = i+1;
+        }
+    }
+    return res;
 }
 
-std::vector<uint64_t> FindAllOutputs([[maybe_unused]] FindOutputsParams const& p, [[maybe_unused]] std::vector<Topology> const& topologies) {
-    std::vector<bool> outs;
-    size_t maxNum = static_cast<size_t>(1) << static_cast<size_t>(p.bits);
-    outs.resize(maxNum+1);
-    std::vector<std::vector<bool>> bufs;
-    bufs.resize(kMaxExplicitNodeCount + kInCount);
-    bufs[0].assign(maxNum+1, false);
-    bufs[0][1] = true;
-    PushShifts(bufs[0]);
-    bufs[1] = bufs[0];
+namespace {
+template<size_t N>
+std::vector<uint64_t> FindAllOutputsImpl(size_t maxBits, size_t explNodeCount, std::vector<Topology> const& topologies) {
+    size_t maxNum = static_cast<size_t>(1) << static_cast<size_t>(maxBits);
+    bs::BitSet<N> outs = [maxNum]() -> bs::BitSet<N> {
+        if constexpr (N == 1) {
+            return bs::BitSet{std::array{maxNum+1}};
+        } else if (N == 2) {
+            return bs::BitSet{std::array{maxNum+1, maxNum+1}};
+        } else {
+            std::abort();
+        }
+    }();
+    std::vector<bs::BitSet<N>> bufs;
+    bufs.reserve(explNodeCount + N);
+    for (size_t i = 0; i < explNodeCount + N; ++i) {
+        if constexpr (N == 1) {
+            bufs.emplace_back(std::array<size_t, 1>{maxNum+1});
+        } else if (N == 2) {
+            bufs.emplace_back(std::array<size_t, 2>{maxNum+1, maxNum + 1});
+        } else {
+            std::abort();
+        }
+    }
+    if constexpr (N == 1) {
+        bufs[0].Put(true, static_cast<size_t>(1));
+        PushShifts(bufs[0]);
+    } else if (N == 2) {
+        bufs[0].Put(true, static_cast<size_t>(1), static_cast<size_t>(0));
+        PushShifts(bufs[0]);
+        bufs[1].Put(true, static_cast<size_t>(0), static_cast<size_t>(1));
+        PushShifts(bufs[1]);
+    } else {
+        std::abort();
+    }
     for (Topology const& t : topologies) {
-        L().AttrU64("nodeCount", t.size()).Log("Processing topology");
-        FindTopologyOutputs(t, p.bits, outs, bufs);
+        if (t.size() > explNodeCount) {
+            throw std::invalid_argument("topology is bigger than maxExplicitNodeCount");
+        }
+        //L().AttrU64("nodeCount", t.size()).Log("Processing topology");
+        FindTopologyOutputs(t, N, maxBits, outs, bufs);
     }
     std::vector<uint64_t> ans;
-    for (size_t i = 0; i < outs.size(); ++i) {
-        if (outs[i]) {
-            ans.push_back(static_cast<uint64_t>(i));
+    if constexpr (N == 1) {
+        for (size_t i = 0; i < outs.size()[0]; ++i) {
+            if (outs.At(i)) {
+                ans.push_back(static_cast<uint64_t>(i));
+            }
+        }
+    } else {
+        for (size_t i = 0; i < outs.size()[0]; i++) {
+            for (size_t j = 0; j < outs.size()[1]; j++) {
+                if (outs.At(i, j)) {
+                    ans.push_back(static_cast<uint64_t>(i));
+                    ans.push_back(static_cast<uint64_t>(j));
+                }
+            }
         }
     }
     return ans;
+}
+}
+
+std::vector<uint64_t> FindAllOutputs(FindOutputsParams const& p, std::vector<Topology> const& topologies) {
+    ValidateFindOutputParams(p);
+    if (p.inputCount == 1) {
+        return FindAllOutputsImpl<1>(p.maxBits, p.maxExplicitNodeCount, topologies);
+    } else if (p.inputCount == 2) {
+        return FindAllOutputsImpl<2>(p.maxBits, p.maxExplicitNodeCount, topologies);
+    } else {
+        std::abort();
+    } 
 }
 }

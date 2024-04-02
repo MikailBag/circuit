@@ -15,6 +15,9 @@ void LogEvent::AttrU64Impl(std::string_view key, uint64_t value) {
 void LogEvent::AttrI64Impl(std::string_view key, int64_t value) {
     mKvPairs.emplace_back(key, value);
 }
+void LogEvent::AttrSImpl(std::string_view key, std::string_view value) {
+    mKvPairs.emplace_back(key, value);
+}
 
 
 void LogEvent::LogImpl(std::string_view message) && {
@@ -40,20 +43,36 @@ LogEvent Logger::operator()() const {
     return b;
 }
 
-static std::set<std::string> ParseDisabledLoggers(std::string_view spec) {
-    std::set<std::string> ans;
+namespace {
+struct LoggingConfig {
+    std::set<std::string> disabledLoggers;
+    bool disableAllLoggers = false;
+
+    void AddDisabledLoggerSpec(std::string_view spec) {
+        if (spec == "ALL") {
+            disableAllLoggers = true;
+        } else {
+            disabledLoggers.emplace(spec);
+        }
+    }
+};
+
+LoggingConfig ParseDisabledLoggers(std::string_view spec) {
+    LoggingConfig cfg;
     while (true) {
         size_t pos = spec.find_first_of(',');
         if (pos == std::string_view::npos) {
             if (!spec.empty()) {
-                ans.emplace(spec);
+                cfg.AddDisabledLoggerSpec(spec);
             }
             break;
         }
-        ans.emplace(spec.substr(0, pos));
+        cfg.AddDisabledLoggerSpec(spec.substr(0, pos));
         spec = spec.substr(pos+1);
     }
-    return ans;
+    return cfg;
+}
+
 }
 
 static std::string GetEnv(std::string const& name) {
@@ -67,8 +86,8 @@ static std::string GetEnv(std::string const& name) {
 class GetLoggerH {
 public:
     static bool IsEnabled([[maybe_unused]] std::string const& caller) {
-        static std::set<std::string> disabledLoggers = ParseDisabledLoggers(GetEnv("LOG_DISABLE"));
-        return disabledLoggers.count(caller) == 0;
+        static LoggingConfig conf = ParseDisabledLoggers(GetEnv("LOG_DISABLE"));
+        return !conf.disableAllLoggers && conf.disabledLoggers.count(caller) == 0;
     }
     static Logger GetLoggerImpl(std::string caller) {
         Logger l;

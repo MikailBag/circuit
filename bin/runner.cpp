@@ -8,9 +8,9 @@
 
 
 int main(int argc, char** argv) {
-    argparser::ParserConfig pc;
+    argparser::Parser pc;
     pc.AddOption("target").Required();
-    std::map<std::string, std::string> opts = argparser::ParseArgv(pc, argc, argv);
+    std::map<std::string, std::string> opts = pc.ParseArgv(argc, argv);
     uint64_t x = std::stoi(opts["target"]);
     Graph g = MakeGraphUsingCsd(x);
     if (Evaluate1D(g).back() != x) {

@@ -17,20 +17,26 @@ public:
     void operator=(LogEvent const&) = delete;
 
     void Log(std::string_view message) && {
-        if (kDisableAllLogs || !mEnabled) {
+        if (detail::kDisableAllLogs || !mEnabled) {
             return;
         }
         std::move(*this).LogImpl(message);
     }
     LogEvent AttrU64(std::string_view key, uint64_t value) && {
-        if (!kDisableAllLogs && mEnabled) {
+        if (!detail::kDisableAllLogs && mEnabled) {
             AttrU64Impl(key, value);
         }
         return std::move(*this);
     }
     LogEvent AttrI64(std::string_view key, int64_t value) && {
-        if (!kDisableAllLogs && mEnabled) {
+        if (!detail::kDisableAllLogs && mEnabled) {
             AttrI64Impl(key, value);
+        }
+        return std::move(*this);
+    }
+    LogEvent AttrS(std::string_view key, std::string_view value) && {
+        if (!detail::kDisableAllLogs && mEnabled) {
+            AttrSImpl(key, value);
         }
         return std::move(*this);
     }
@@ -40,9 +46,10 @@ private:
     void LogImpl(std::string_view message) &&;
     void AttrU64Impl(std::string_view key, uint64_t value);
     void AttrI64Impl(std::string_view key, int64_t value);
+    void AttrSImpl(std::string_view key, std::string_view value);
     bool mEnabled;
     std::string_view mPrefix;
-    using Value = std::variant<uint64_t, int64_t>;
+    using Value = std::variant<uint64_t, int64_t, std::string_view>;
 
     std::vector<std::pair<std::string_view, Value>> mKvPairs;
 };

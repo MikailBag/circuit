@@ -1,25 +1,22 @@
 #include "argparser/argparser.h"
 
+#include "lex.h"
+
+#include "log/log.h"
+
 #include <cstdlib>
 #include <iostream>
+#include <optional>
 #include <set>
 #include <stdexcept>
 #include <string_view>
-#include <optional>
+#include <variant>
+
+static Logger L = GetLogger("argparser");
 
 namespace argparser {
 namespace {
-bool StartsWith(std::string_view s, std::string_view prefix) {
-    if (s.size() < prefix.size()) {
-        return false;
-    }
-    for (size_t i = 0; i < prefix.size(); ++i) {
-        if (s[i] != prefix[i]) {
-            return false;
-        }
-    }
-    return true;
-}
+
 
 [[noreturn]] void Die(std::string_view message)  {
     std::cerr << "Error: " << message << std::endl;
@@ -36,7 +33,6 @@ namespace detail {
 class Access {
 public:
     static Option MakeOption();
-    static std::map<std::string, std::string> Parse(ParserConfig const& config, size_t argc, char const* const* argv);
     static OptionData const& UnpackOpt(Option const& opt);
 };
 }
@@ -70,39 +66,27 @@ Option& Option::DefaultValue(std::string_view dfl) {
 
 Option::~Option() = default;
 
-class ParserConfig::Impl {
+class Parser::Impl {
 public:
     std::map<std::string, std::string> Parse(size_t argc, char const* const* argv) const {
-        std::map<std::string, std::string> res;
-        for (size_t i = 1; i < argc; i += 2) {
-            std::string_view flag = argv[i];
-            if (i+1 == argc) {
-                Die("no value for key");
-            }
-            if (!StartsWith(flag, "--") || flag.size() == 2) {
-                Die("invalid option " + std::string(flag));
-            }
-            auto key = std::string(flag.substr(2));
-            if (!mOpts.contains(key)) {
-                Die("unknown option " + std::string(key));
-            }
-            res[key] = argv[i+1];
-        }
-        for (auto const& [k, opt] : mOpts) {
-            if (!res.contains(k)) {
+        ParseResult res = ParseImpl(argc, argv);
+        if (res.helpRequested) {
+            for (auto const& [name, opt] : mOpts) {
+                std::cout << "--" << name;
                 if (Access::UnpackOpt(opt).required) {
-                    Die("missing required option " + k);
+                    std::cout << " (required)";
+                } else if (Access::UnpackOpt(opt).defaultValue) {
+                    std::cout << " [=" << *Access::UnpackOpt(opt).defaultValue << ']';
                 }
-                if (Access::UnpackOpt(opt).defaultValue) {
-                    res[k] = *Access::UnpackOpt(opt).defaultValue;
-                }
-            }   
+                std::cout << '\n';
+            }
+            std::exit(0);
         }
-        return res;
+        return res.opts;
     }
 
     Option& AddOption(std::string_view name) {
-        Option opt = Access::MakeOption();//
+        Option opt = Access::MakeOption();
         auto [it, inserted] = mOpts.insert(std::pair<std::string, Option>{std::string(name), std::move(opt)});
         if (!inserted) {
             throw std::invalid_argument("name already used");
@@ -110,14 +94,65 @@ public:
         return it->second;
     }
 private:
+    struct ParseResult {
+        std::map<std::string, std::string> opts;
+        bool helpRequested = false;
+    };
+private:
+    ParseResult ParseImpl(size_t argc, char const* const* argv) const {
+        L().AttrU64("argcAdjusted", argc-1).Log("Parsing arguments");
+        lexer::Lexer lex {argc, argv};
+        ParseResult res;
+        while (lex) {
+            L().Log("Parsing next argument");
+            lexer::Token t = lex.Next();
+            if (!std::holds_alternative<lexer::OptionToken>(t)) {
+                Die("expected option, got value " + std::get<lexer::ValueToken>(t).value);
+            }
+            auto ot = std::get<lexer::OptionToken>(t);
+            if (ot.name == "help") {
+                L().Log("detected --help");
+                res.helpRequested = true;
+                continue;
+            }
+            if (!mOpts.contains(ot.name)) {
+                Die("unknown option " + std::string(ot.name));
+            }
+            if (!lex) {
+                Die("unexpected end of options");
+            }
+            t = lex.Next();
+            if (!std::holds_alternative<lexer::ValueToken>(t)) {
+                Die("expected value, got option " + std::get<lexer::OptionToken>(t).name);
+            }
+            auto vt = std::get<lexer::ValueToken>(t);
+            res.opts[ot.name] = vt.value;
+        }
+        for (auto const& [k, opt] : mOpts) {
+            if (!res.opts.contains(k)) {
+                if (Access::UnpackOpt(opt).required) {
+                    Die("missing required option " + k);
+                }
+                if (Access::UnpackOpt(opt).defaultValue) {
+                    res.opts[k] = *Access::UnpackOpt(opt).defaultValue;
+                }
+            }
+        }
+        return res;
+    }
+private:
     std::map<std::string, Option> mOpts;
 };
 
-ParserConfig::ParserConfig(): mImpl(std::unique_ptr<Impl>(new Impl)) {}
+Parser::Parser(): mImpl(std::unique_ptr<Impl>(new Impl)) {}
 
-ParserConfig::~ParserConfig() = default;
+std::map<std::string, std::string> Parser::ParseArgv(size_t argc, char const* const* argv) const {
+    return mImpl->Parse(argc, argv);
+}
 
-Option& ParserConfig::AddOption(std::string_view name) {
+Parser::~Parser() = default;
+
+Option& Parser::AddOption(std::string_view name) {
     return mImpl->AddOption(name); 
 }
 
@@ -128,13 +163,5 @@ Option Access::MakeOption() {
 
 OptionData const& Access::UnpackOpt(Option const& opt) {
     return opt.mImpl->data;
-}
-
-std::map<std::string, std::string> Access::Parse(ParserConfig const& config, size_t argc, char const* const* argv) {
-    return config.mImpl->Parse(argc, argv);
-}
-
-std::map<std::string, std::string> ParseArgv(ParserConfig const& config, size_t argc, char const* const* argv) {
-    return Access::Parse(config, argc, argv);
 }
 }

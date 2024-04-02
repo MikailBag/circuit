@@ -1,9 +1,19 @@
 #pragma once
 
-#include "graph.h"
+#include "bruteforce/topology.h"
 
-namespace bruteforce::detail {
-struct IsomorphismKey {};
+#include <array>
 
-IsomorphismKey Get(Graph const& g);
+namespace bruteforce::iso {
+struct IsomorphismKey {
+    std::array<size_t, kMaxExplicitNodeCount * 2> cnt;
+    uint64_t output = 0;
+    IsomorphismKey() {
+        cnt.fill(0);
+    }
+
+    friend auto operator<=>(IsomorphismKey const& lhs, IsomorphismKey const& rhs) = default;
+};
+
+IsomorphismKey Get(Topology const& g, size_t inputCount);
 }

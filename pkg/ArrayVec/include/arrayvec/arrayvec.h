@@ -32,14 +32,33 @@ private:
             return std::launder(reinterpret_cast<T*>(bPtr));
         }
 
-        T const* Ptr( ) const {
+        T const* Ptr() const {
             void const* bPtr = Place();
             return std::launder(reinterpret_cast<T const*>(bPtr));
         }
+
+        void Destroy() {
+            Ptr()->~T();
+        }
     };
     std::array<Slot, N> mSlots;
-    std::size_t mSize;
+    std::size_t mSize = 0;
 public:
+    static_assert(std::is_trivially_destructible_v<T>);
+    ArrayVec() {}
+    ArrayVec(ArrayVec const& that) noexcept {
+        for (size_t i = 0; i < that.mSize; ++i) {
+            new (mSlots[i].Place()) T(that[i]);
+        }
+        mSize = that.mSize;
+    }
+    ArrayVec(ArrayVec&& that) noexcept {
+        for (size_t i = 0; i < that.mSize; ++i) {
+            new (mSlots[i].Place()) T(std::move(that[i]));
+        }
+        mSize = that.mSize;
+    }
+
     void push_back(T&& value) {
         if (detail::kEnableBoundChecks) {
             assert(mSize < N);
@@ -69,7 +88,12 @@ public:
         }
         return *mSlots[idx].Ptr();
     }
-private:
+
+    ~ArrayVec() {
+        for (size_t i = 0; i < mSize; ++i) {
+            mSlots[i].Destroy();
+        }
+    }
 };
 
 }

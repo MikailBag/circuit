@@ -4,7 +4,8 @@
 #else
 #cmakedefine01 LOG_DISABLE
 #endif
-
+namespace detail {
 inline constexpr bool kDisableAllLogs = static_cast<bool>(LOG_DISABLE);
+}
 
 #undef LOG_DISABLE
