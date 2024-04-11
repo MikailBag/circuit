@@ -42,10 +42,16 @@ int main(int argc, char** argv) {
 
     std::cout << "Unique topology count: " << uniqueTopologies.size() << std::endl;
 
+    op.progressListener = [uniqueTopologies = std::cref(uniqueTopologies)](bruteforce::ProgressEvent const& ev) {
+        if (ev.finished % 100 == 0) {
+            std::cout << "Progress: " << ev.finished << " / " << uniqueTopologies.get().size() << std::endl;
+        }
+    };
+
     std::vector<uint64_t> outputs = bruteforce::FindAllOutputs(op, uniqueTopologies);
 
  
-    std::cout << "Possible output count: " << outputs.size() / op.inputCount << std::endl;
+    std::cout << "Impossible output count: " << outputs.size() / op.inputCount << std::endl;
     assert(outputs.size() % op.inputCount == 0);
     for (size_t i = 0; i < outputs.size(); i += op.inputCount) {
         std::cout << '(';

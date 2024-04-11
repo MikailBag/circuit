@@ -5,7 +5,7 @@
 #include <variant>
 #include <cstdint>
 
-#include "log-config.h"
+#include "log/detail/config.h"
 
 class [[nodiscard]] LogEvent final  {
     friend class Logger;

@@ -55,7 +55,6 @@ void PushShifts(bs::BitSet<N>& v) {
 template<size_t N>
 void FindTopologyOutputs(Topology const& t, size_t inputs, uint8_t bits, bs::BitSet<N>& ans, std::vector<bs::BitSet<N>> bufs) {
     assert(bufs.size() >= t.size() + inputs);
-    //ans.Fill(false);
     size_t maxVal = 1 << static_cast<size_t>(bits);
     for (size_t i = 0; i < t.size(); i++) {
         bufs[i+inputs].Fill(false);

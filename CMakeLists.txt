@@ -7,13 +7,16 @@ project(Circuit)
 
 find_package(Catch2 3 CONFIG REQUIRED)
 
-option(LOG_DISABLE "Disable all logging")
+
+option(LOG_DISABLE_IF "Disable all logging")
+add_custom_target(genexdebug COMMAND ${CMAKE_COMMAND} -E echo )
+
 add_library(Log STATIC)
 target_include_directories(Log PUBLIC pkg/Log/include)
-configure_file(pkg/Log/config.h.in log-config/log-config.h)
 target_include_directories(Log PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/log-config)
 target_sources(Log PRIVATE pkg/Log/log.cpp)
 target_compile_features(Log PUBLIC cxx_std_20)
+target_compile_definitions(Log PUBLIC "LOGGER_DISABLE_ALL_LOGGING=$<CONFIG:${LOG_DISABLE_IF}>")
 
 add_library(ArgParser STATIC)
 target_link_libraries(ArgParser PRIVATE Log)
@@ -25,6 +28,11 @@ add_library(ArrayVec STATIC)
 target_include_directories(ArrayVec PUBLIC pkg/ArrayVec/include)
 target_sources(ArrayVec PRIVATE pkg/ArrayVec/arrayvec.cpp)
 target_compile_features(ArrayVec PUBLIC cxx_std_20)
+
+add_library(Conf STATIC)
+target_include_directories(Conf PUBLIC pkg/Conf/include)
+target_include_directories(Conf PRIVATE)
+target_sources(Conf)
 
 add_library(Core STATIC)
 target_link_libraries(Core PRIVATE Log)
@@ -73,7 +81,9 @@ target_sources(Test PRIVATE ut/find_all_outputs_test.cpp)
 #target_sources(ut PRIVATE ut/testk_test.cpp)
 target_link_libraries(Test PRIVATE Catch2::Catch2WithMain Core BruteForce Log)
 
-install(TARGETS FindAllOutputs DESTINATION bin)
+install(TARGETS FindAllOutputs DESTINATION bin CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
 set(CPACK_GENERATOR TGZ)
+set(CPACK_ARCHIVE_FILE_NAME "$<CONFIGURATION>")
+#configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MultiCPackConfig.cmake ${CMAKE_BINARY_DIR}/CPackConfig.cmake)
 include(CPack)

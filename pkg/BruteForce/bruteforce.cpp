@@ -100,7 +100,7 @@ std::vector<Topology> FilterTopologies(FilterParams const& p, std::vector<Topolo
 
 namespace {
 template<size_t N>
-std::vector<uint64_t> FindAllOutputsImpl(size_t maxBits, size_t explNodeCount, std::vector<Topology> const& topologies) {
+std::vector<uint64_t> FindAllOutputsImpl(size_t maxBits, size_t explNodeCount, std::function<void(ProgressEvent const&)> func, std::vector<Topology> const& topologies) {
     size_t maxNum = static_cast<size_t>(1) << static_cast<size_t>(maxBits);
     bs::BitSet<N> outs = [maxNum]() -> bs::BitSet<N> {
         if constexpr (N == 1) {
@@ -133,24 +133,30 @@ std::vector<uint64_t> FindAllOutputsImpl(size_t maxBits, size_t explNodeCount, s
     } else {
         std::abort();
     }
+    size_t processed = 0;
     for (Topology const& t : topologies) {
         if (t.size() > explNodeCount) {
             throw std::invalid_argument("topology is bigger than maxExplicitNodeCount");
         }
-        //L().AttrU64("nodeCount", t.size()).Log("Processing topology");
+        ++processed;
+        ProgressEvent ev;
+        ev.finished = processed;
+        if (func) {
+            func(ev);
+        }
         FindTopologyOutputs(t, N, maxBits, outs, bufs);
     }
     std::vector<uint64_t> ans;
     if constexpr (N == 1) {
         for (size_t i = 0; i < outs.size()[0]; ++i) {
-            if (outs.At(i)) {
+            if (!outs.At(i)) {
                 ans.push_back(static_cast<uint64_t>(i));
             }
         }
     } else {
         for (size_t i = 0; i < outs.size()[0]; i++) {
             for (size_t j = 0; j < outs.size()[1]; j++) {
-                if (outs.At(i, j)) {
+                if (!outs.At(i, j)) {
                     ans.push_back(static_cast<uint64_t>(i));
                     ans.push_back(static_cast<uint64_t>(j));
                 }
@@ -164,9 +170,9 @@ std::vector<uint64_t> FindAllOutputsImpl(size_t maxBits, size_t explNodeCount, s
 std::vector<uint64_t> FindAllOutputs(FindOutputsParams const& p, std::vector<Topology> const& topologies) {
     ValidateFindOutputParams(p);
     if (p.inputCount == 1) {
-        return FindAllOutputsImpl<1>(p.maxBits, p.maxExplicitNodeCount, topologies);
+        return FindAllOutputsImpl<1>(p.maxBits, p.maxExplicitNodeCount, p.progressListener, topologies);
     } else if (p.inputCount == 2) {
-        return FindAllOutputsImpl<2>(p.maxBits, p.maxExplicitNodeCount, topologies);
+        return FindAllOutputsImpl<2>(p.maxBits, p.maxExplicitNodeCount, p.progressListener, topologies);
     } else {
         std::abort();
     } 
