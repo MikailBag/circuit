@@ -1,11 +1,14 @@
 #pragma once
 
+#include "config.h"
+#include "progress.h"
 #include "topology.h"
+
 
 #include <functional>
 #include <vector>
 
-namespace bruteforce {
+namespace bf {
 
 
 struct FindTopologyParams {
@@ -17,14 +20,11 @@ std::vector<Topology> FindAllTopologies(FindTopologyParams const& p);
 
 struct FilterParams {
     size_t inputCount = 0;
-    bool unsafe = false;
+    Config const& config;
 };
 
 std::vector<Topology> FilterTopologies(FilterParams const& p, std::vector<Topology> const& topologies);
 
-struct ProgressEvent {
-    size_t finished = 0;
-};
 
 struct FindOutputsParams {
     uint8_t maxBits = 0;

@@ -7,17 +7,9 @@
 #include <cassert>
 
 
-static Logger L = GetLogger("bf.topeval");
+static Logger L = GetLogger("bf.alpha.topeval");
 
-namespace bruteforce {
-namespace {
-/*template<size_t N>
-void Combine(bs::BitSet<N> const& lhs, bs::BitSet<N> const& rhs, bs::BitSet<N>& out) {
-    
-}*/
-}
-
-
+namespace bf::alpha {
 void PushShifts1(bs::BitSet<1>& v) {
     bs::Size<1> n = v.size();
     for (size_t i = 0; 2*i < n[0]; i++) {
@@ -33,6 +25,7 @@ void PushShifts2(bs::BitSet<2>& v) {
     for (size_t i = 0; 2*i < n[0]; i++) {
         for (size_t j = 0; 2*j < n[1]; j++) {
             if (v.At(i, j)) {
+                L().AttrU64("src0", i).AttrU64("src1", j).AttrU64("dst0", 2*i).AttrU64("dst1", 2*j).Log("Pushing");
                 v.Put(true, 2*i, 2*j);
             }
         }

@@ -4,7 +4,7 @@
 #include "bitset.h"
 
 #include <vector>
-namespace bruteforce {
+namespace bf::alpha {
 
 template<size_t N>
 void PushShifts(bs::BitSet<N>& v);

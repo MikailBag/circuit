@@ -7,7 +7,7 @@
 #include <vector>
 
 
-namespace bruteforce::bs {
+namespace bf::bs {
 
 template<size_t NDimensionCount>
 using Size = std::array<size_t, NDimensionCount>;

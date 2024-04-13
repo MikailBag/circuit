@@ -4,7 +4,7 @@
 
 #include <array>
 
-namespace bruteforce::iso {
+namespace bf::iso {
 struct IsomorphismKey {
     std::array<size_t, kMaxExplicitNodeCount * 2> cnt;
     uint64_t output = 0;

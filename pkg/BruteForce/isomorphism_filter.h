@@ -6,6 +6,6 @@
 #include <span>
 #include <vector>
 
-namespace bruteforce::iso {
+namespace bf::iso {
 void FilterTopologies(std::span<Topology const> input, FilterParams const& p, std::vector<Topology>& output);
 }

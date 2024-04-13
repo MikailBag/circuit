@@ -31,8 +31,9 @@ target_compile_features(ArrayVec PUBLIC cxx_std_20)
 
 add_library(Conf STATIC)
 target_include_directories(Conf PUBLIC pkg/Conf/include)
-target_include_directories(Conf PRIVATE)
-target_sources(Conf)
+target_include_directories(Conf PRIVATE pkg/Conf)
+target_sources(Conf PRIVATE pkg/Conf/conf.cpp pkg/Conf/description.cpp pkg/Conf/error.cpp pkg/Conf/parse.cpp)
+target_compile_features(Conf PUBLIC cxx_std_20)
 
 add_library(Core STATIC)
 target_link_libraries(Core PRIVATE Log)
@@ -51,7 +52,7 @@ target_sources(Core PRIVATE core/simple_solver.cpp)
 add_library(BruteForce STATIC)
 target_include_directories(BruteForce PUBLIC pkg/BruteForce/include)
 target_include_directories(BruteForce PRIVATE pkg/BruteForce)
-target_link_libraries(BruteForce PUBLIC Core ArrayVec)
+target_link_libraries(BruteForce PUBLIC Core ArrayVec Conf)
 target_link_libraries(BruteForce PRIVATE Log)
 target_compile_features(BruteForce PUBLIC cxx_std_20)
 target_sources(
@@ -59,9 +60,11 @@ target_sources(
     PRIVATE
         pkg/BruteForce/bitset.cpp
         pkg/BruteForce/bruteforce.cpp
-        pkg/BruteForce/eval_topology.cpp
+        pkg/BruteForce/config.cpp
         pkg/BruteForce/isomorphism_filter.cpp
         pkg/BruteForce/isomorphism_key.cpp
+        pkg/BruteForce/alpha/engine.cpp
+        pkg/BruteForce/alpha/eval_topology.cpp
 )
 
 add_executable(M bin/main.cpp)

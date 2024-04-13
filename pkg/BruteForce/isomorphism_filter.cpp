@@ -6,7 +6,7 @@
 
 static Logger L = GetLogger("bf.iso.filter");
 
-namespace bruteforce::iso {
+namespace bf::iso {
 
 namespace {
 bool HasSingleSink(Topology const& t, size_t inputCount) {
@@ -32,7 +32,7 @@ void FilterTopologies(std::span<Topology const> topologies, FilterParams const& 
             continue;
         }
         output.push_back(t);
-        if (p.unsafe) {
+        if (p.config.unsafe) {
             break;
         }
     }

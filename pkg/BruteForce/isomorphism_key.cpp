@@ -2,7 +2,7 @@
 
 #include "bruteforce/topology.h"
 
-namespace bruteforce::iso {
+namespace bf::iso {
 namespace {
 uint64_t SimpleEval(Topology const& t, size_t inputCount) {
     std::array<uint64_t, kMaxExplicitNodeCount + kMaxInCount> vals;

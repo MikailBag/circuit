@@ -13,30 +13,29 @@
 
 static Logger L = GetLogger("bruteforce-test");
 
-TEST_CASE("Exhaustive search", "[find-all-outputs]") {
-    SECTION("Basic test") {
-        bruteforce::FindTopologyParams p;
+    TEST_CASE("Basic test", "[bruteforce][bruteforce/outputs]") {
+        bf::FindTopologyParams p;
         p.explicitNodeCountLimit = 1;
         p.inputCount = 2;
-        std::vector<bruteforce::Topology> out = bruteforce::FindAllTopologies(p);
+        std::vector<bf::Topology> out = bf::FindAllTopologies(p);
         CHECK(out.size() == 3);
-        for (bruteforce::Topology const& t : out) {
+        for (bf::Topology const& t : out) {
             CHECK(t.size() == 1);
         }
         p.inputCount = 1;
-        out = bruteforce::FindAllTopologies(p);
+        out = bf::FindAllTopologies(p);
         CHECK(out.size() == 1);
-        for (bruteforce::Topology const& t : out) {
+        for (bf::Topology const& t : out) {
             CHECK(t.size() == 1);
         }
     }
-    SECTION("Finds outputs of trivial scheme") {
-        bruteforce::FindOutputsParams p;
+    TEST_CASE("Finds outputs of trivial scheme", "[bruteforce][bruteforce/outputs]") {
+        bf::FindOutputsParams p;
         p.maxBits = 2;
         p.inputCount = 1;
-        std::vector<bruteforce::Topology> tps;
-        tps.push_back(bruteforce::Topology{});
-        std::vector<uint64_t> outputs = bruteforce::FindAllOutputs(p, tps);
+        std::vector<bf::Topology> tps;
+        tps.push_back(bf::Topology{});
+        std::vector<uint64_t> outputs = bf::FindAllOutputs(p, tps);
         for (uint64_t x : outputs) {
             L().AttrU64("num", x).Log("Output");
         }
@@ -46,16 +45,16 @@ TEST_CASE("Exhaustive search", "[find-all-outputs]") {
         CHECK(std::find(outputs.begin(), outputs.end(), 4) != outputs.end());
     }
 
-    SECTION("Finds outpus of a bit more complex scheme") {
-        bruteforce::FindOutputsParams p;
+    TEST_CASE("Finds outpus of a bit more complex scheme", "[bruteforce][bruteforce/outputs]") {
+        bf::FindOutputsParams p;
         p.maxBits = 2;
         p.maxExplicitNodeCount = 1;
         p.inputCount = 1;
-        std::vector<bruteforce::Topology> tps;
-        bruteforce::Topology tp;
+        std::vector<bf::Topology> tps;
+        bf::Topology tp;
         tp.push_back(TopologyNode{});
         tps.push_back(tp);
-        std::vector<uint64_t> outputs = bruteforce::FindAllOutputs(p, tps);
+        std::vector<uint64_t> outputs = bf::FindAllOutputs(p, tps);
         for (uint64_t x : outputs) {
             L().AttrU64("num", x).Log("Output");
         }
@@ -66,13 +65,13 @@ TEST_CASE("Exhaustive search", "[find-all-outputs]") {
         CHECK(std::find(outputs.begin(), outputs.end(), 3) != outputs.end());
         CHECK(std::find(outputs.begin(), outputs.end(), 4) != outputs.end());
     }
-    SECTION("Correctly finds certain topology (regression)") {
-        bruteforce::FindTopologyParams p;
+    TEST_CASE("Correctly finds certain topology (regression)", "[bruteforce][bruteforce/outputs][regression]") {
+        bf::FindTopologyParams p;
         p.explicitNodeCountLimit = 1;
         p.inputCount = 2;
-        std::vector<bruteforce::Topology> out = bruteforce::FindAllTopologies(p);
+        std::vector<bf::Topology> out = bf::FindAllTopologies(p);
         bool ok = false;
-        for (bruteforce::Topology const& t : out) {
+        for (bf::Topology const& t : out) {
             if (t[0].links[0] == 0 && t[0].links[1] == 0) {
                 ok = true;
             }
@@ -80,22 +79,21 @@ TEST_CASE("Exhaustive search", "[find-all-outputs]") {
         CHECK(ok);
     }
 
-    SECTION("Correctly finds output (regression)") {
-        bruteforce::Topology tp;
-        tp.push_back(TopologyNode{.links={0, 0}});
-        bruteforce::FindOutputsParams p;
-        p.inputCount = 2;
-        p.maxBits = 3;
-        p.maxExplicitNodeCount = 1;
-        std::vector<bruteforce::Topology> tps;
-        tps.push_back(tp);
-        std::vector<uint64_t> outputs = bruteforce::FindAllOutputs(p, tps);
-        bool ok = false;
-        for (size_t i = 0; i < outputs.size(); i += 2) {
-            if (outputs[i] == 3 && outputs[i+1] == 0) {
-                ok = true;
-            }
+TEST_CASE("Correctly finds output", "[bruteforce][bruteforce/outputs][regression]") {
+    bf::Topology tp;
+    tp.push_back(TopologyNode{.links={0, 0}});
+    bf::FindOutputsParams p;
+    p.inputCount = 2;
+    p.maxBits = 3;
+    p.maxExplicitNodeCount = 1;
+    std::vector<bf::Topology> tps;
+    tps.push_back(tp);
+    std::vector<uint64_t> outputs = bf::FindAllOutputs(p, tps);
+    bool ok = false;
+    for (size_t i = 0; i < outputs.size(); i += 2) {
+        if (outputs[i] == 3 && outputs[i+1] == 0) {
+            ok = true;
         }
-        CHECK(ok);
     }
+    CHECK(ok);
 }
