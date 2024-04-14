@@ -9,22 +9,22 @@ uint64_t SimpleEval(Topology const& t, size_t inputCount) {
     for (size_t i = 0; i < inputCount; i++) {
         vals[i] = i+1;
     }
-    for (size_t i = 0; i < t.size(); i++) {
-        vals[inputCount + i] = vals[t[i].links[0]] + vals[t[i].links[1]];
+    for (size_t i = 0; i < t.nodes.size(); i++) {
+        vals[inputCount + i] = vals[t.nodes[i].links[0]] + vals[t.nodes[i].links[1]];
     }
-    return vals[inputCount + t.size() - 1];
+    return vals[inputCount + t.nodes.size() - 1];
 }
 }
 
 IsomorphismKey Get(Topology const& g, size_t inputCount) {
     std::array<size_t, kMaxExplicitNodeCount + 2> degrees;
     degrees.fill(0);
-    for (size_t i = 0; i < g.size(); i++) {
-        degrees[g[i].links[0]]++;
-        degrees[g[i].links[1]]++;
+    for (size_t i = 0; i < g.nodes.size(); i++) {
+        degrees[g.nodes[i].links[0]]++;
+        degrees[g.nodes[i].links[1]]++;
     }
     IsomorphismKey ik;
-    for (size_t i = 0; i < g.size(); i++) {
+    for (size_t i = 0; i < g.nodes.size(); i++) {
         ik.cnt[degrees[i]]++;
     }
     ik.output = SimpleEval(g, inputCount);

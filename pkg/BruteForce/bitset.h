@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cassert>
 #include <concepts>
 #include <cstdlib>
 #include <stdexcept>
@@ -34,12 +35,14 @@ public:
     bool At(std::same_as<size_t> auto ...is) const {
         ValidatePackSize(is...);
         size_t i = ResolveIndex(is...);
+        assert(i < mInner.size());
         return mInner[i];
     }
 
     void Put(bool x, std::same_as<size_t> auto ...is) {
         ValidatePackSize(is...);
         size_t i = ResolveIndex(is...);
+        assert(i < mInner.size());
         mInner[i] = x;
     }
 

@@ -12,12 +12,12 @@ namespace {
 bool HasSingleSink(Topology const& t, size_t inputCount) {
     std::array<bool, kMaxExplicitNodeCount+kMaxInCount> used;
     used.fill(false);
-    for (size_t i = 0; i < t.size(); i++) {
-        used[t[i].links[0]] = true;
-        used[t[i].links[1]] = true;
+    for (size_t i = 0; i < t.nodes.size(); i++) {
+        used[t.nodes[i].links[0]] = true;
+        used[t.nodes[i].links[1]] = true;
     }
     size_t unused = 0;
-    for (size_t i = 0; i < t.size(); i++) {
+    for (size_t i = 0; i < t.nodes.size(); i++) {
         if (!used[i+inputCount]) {
             unused++;
         }

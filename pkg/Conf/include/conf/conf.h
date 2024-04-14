@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 
 namespace conf {
@@ -24,9 +25,24 @@ public:
     virtual ~Description();
 };
 
+class BindingException : public std::exception {
+
+public:
+    explicit BindingException(std::string message): mMessage(std::move(message)) {}
+
+    char const* what() const noexcept override {
+        return mMessage.c_str();
+    }
+private:
+    std::string mMessage;
+};
+
 class Target {
 public:
     virtual void Describe(Description& desc) = 0;
+
+    // throws BindingException
+    virtual void Postprocess() = 0;
 
     virtual ~Target();
 };

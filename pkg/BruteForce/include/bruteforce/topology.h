@@ -9,6 +9,9 @@ namespace bf {
 inline constexpr size_t kMaxInCount = 2;
 inline constexpr size_t kMaxExplicitNodeCount = 6;
 
-using Topology = arrayvec::ArrayVec<TopologyNode, kMaxExplicitNodeCount>;
+struct Topology {
+    arrayvec::ArrayVec<TopologyNode, kMaxExplicitNodeCount> nodes;
+};
 
+void ValidateTopology(Topology const& t, size_t inputCount);
 }

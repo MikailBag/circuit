@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     tp.inputCount = std::stoi(opts["input-count"]);
     tp.explicitNodeCountLimit = std::stoi(opts["node-count"]);
 
-    bf::FindOutputsParams op;
+    bf::FindOutputsParams op {.config = config.output};
     op.maxBits = std::stoi(opts["bits"]);
     op.maxExplicitNodeCount = tp.explicitNodeCountLimit;
     op.inputCount = tp.inputCount;
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 
     std::cout << "Topology count: " << topologies.size() << std::endl;
 
-    bf::FilterParams fp {.config = config};
+    bf::FilterParams fp {.config = config.filter};
     fp.inputCount = tp.inputCount;
 
 

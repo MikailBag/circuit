@@ -6,6 +6,7 @@
 #include "isomorphism_key.h"
 
 #include "alpha/engine.h"
+#include "beta/engine.h"
 
 #include "log/log.h"
 
@@ -21,14 +22,14 @@ namespace {
 
 static Logger L = GetLogger("bf");
 
-void GoStep([[maybe_unused]] FindTopologyParams const& p, Topology const& g, std::vector<Topology>& out) {
-    for (size_t i = 0; i < g.size() + p.inputCount; ++i) {
-        for (size_t j = i; j < g.size() + p.inputCount; ++j) {
+void GoStep(FindTopologyParams const& p, Topology const& g, std::vector<Topology>& out) {
+    for (size_t i = 0; i < g.nodes.size() + p.inputCount; ++i) {
+        for (size_t j = i; j < g.nodes.size() + p.inputCount; ++j) {
             TopologyNode n;
             n.links[0] = i;
             n.links[1] = j;
             Topology g2{g};
-            g2.push_back(n);
+            g2.nodes.push_back(n);
             out.push_back(std::move(g2));
         }
     }
@@ -101,12 +102,38 @@ std::vector<Topology> FilterTopologies(FilterParams const& p, std::vector<Topolo
 
 std::vector<uint64_t> FindAllOutputs(FindOutputsParams const& p, std::vector<Topology> const& topologies) {
     ValidateFindOutputParams(p);
+    size_t maxNum = static_cast<size_t>(1) << static_cast<size_t>(p.maxBits);
+    std::vector<uint64_t> ans;
     if (p.inputCount == 1) {
-        return alpha::FindAllOutputsBulk<1>(p.maxBits, p.maxExplicitNodeCount, p.progressListener, topologies);
+        bs::BitSet<1> out =  bs::BitSet{std::array{maxNum+1}};
+        if (p.config.isAlpha) {
+            alpha::FindAllOutputsBulk<1>(p.maxBits, p.maxExplicitNodeCount, p.progressListener, topologies, out);
+        } else if (p.config.isBeta) {
+            beta::FindAllOutputsBulk<1>(p.maxBits, p.progressListener, topologies, out);
+        }
+        for (size_t i = 0; i < out.size()[0]; ++i) {
+            if (out.At(i)) {
+                ans.push_back(static_cast<uint64_t>(i));
+            }
+        }
     } else if (p.inputCount == 2) {
-        return alpha::FindAllOutputsBulk<2>(p.maxBits, p.maxExplicitNodeCount, p.progressListener, topologies);
+        bs::BitSet<2> out = bs::BitSet{std::array{maxNum+1, maxNum+1}};
+        if (p.config.isAlpha) {
+            alpha::FindAllOutputsBulk<2>(p.maxBits, p.maxExplicitNodeCount, p.progressListener, topologies, out);
+        } else if (p.config.isBeta) {
+            beta::FindAllOutputsBulk<2>(p.maxBits, p.progressListener, topologies, out);
+        }
+        for (size_t i = 0; i < out.size()[0]; i++) {
+            for (size_t j = 0; j < out.size()[1]; j++) {
+                if (out.At(i, j)) {
+                    ans.push_back(static_cast<uint64_t>(i));
+                    ans.push_back(static_cast<uint64_t>(j));
+                }
+            }
+        }
     } else {
         std::abort();
-    } 
+    }
+    return ans;
 }
 }

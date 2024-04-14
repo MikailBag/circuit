@@ -20,13 +20,14 @@ std::vector<Topology> FindAllTopologies(FindTopologyParams const& p);
 
 struct FilterParams {
     size_t inputCount = 0;
-    Config const& config;
+    FilterConfig const& config;
 };
 
 std::vector<Topology> FilterTopologies(FilterParams const& p, std::vector<Topology> const& topologies);
 
 
 struct FindOutputsParams {
+    OutputConfig const& config;
     uint8_t maxBits = 0;
     size_t maxExplicitNodeCount = 0;
     size_t inputCount = 0;
