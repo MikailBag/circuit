@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     tp.inputCount = std::stoi(opts["input-count"]);
     tp.explicitNodeCountLimit = std::stoi(opts["node-count"]);
 
-    bf::FindOutputsParams op {.config = config.output};
+    bf::FindOutputsParams op {config.output};
     op.maxBits = std::stoi(opts["bits"]);
     op.maxExplicitNodeCount = tp.explicitNodeCountLimit;
     op.inputCount = tp.inputCount;
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 
     std::cout << "Topology count: " << topologies.size() << std::endl;
 
-    bf::FilterParams fp {.config = config.filter};
+    bf::FilterParams fp {config.filter};
     fp.inputCount = tp.inputCount;
 
 
@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
     std::vector<uint64_t> outputs = bf::FindAllOutputs(op, uniqueTopologies);
 
  
-    std::cout << "Impossible output count: " << outputs.size() / op.inputCount << std::endl;
+    std::cout << "Possible output count: " << outputs.size() / op.inputCount << std::endl;
     assert(outputs.size() % op.inputCount == 0);
     for (size_t i = 0; i < outputs.size(); i += op.inputCount) {
         std::cout << '(';

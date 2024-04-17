@@ -41,7 +41,7 @@ struct OutputConfig : public conf::Target {
 
     void Postprocess() override {
         if (!isAlpha && !isBeta) {
-            isAlpha = true;
+            isBeta = true;
         }
     }
 };

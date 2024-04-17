@@ -62,10 +62,10 @@ void FindTopologyOutputs2(Topology const& t, uint8_t bits, bs::BitSet<2>& ans, s
     size_t maxVal = 1 << static_cast<size_t>(bits);
     bool isSink = pos == kInputCount + t.nodes.size() - 1;
     auto push = [pos, isSink, maxVal, buf, t = std::cref(t), bits, ans = std::ref(ans)](int64_t resLhs, int64_t resRhs){
-        if (std::max(std::abs(resLhs), std::abs(resRhs)) > maxVal) {
+        if (static_cast<uint64_t>(std::max(std::abs(resLhs), std::abs(resRhs))) > maxVal) {
             return;
         }
-        L().AttrU64("pos", pos).AttrI64("lhs", resLhs).AttrI64("rhs", resRhs).Log("Pushing");
+        //L().AttrU64("pos", pos).AttrI64("lhs", resLhs).AttrI64("rhs", resRhs).Log("Pushing");
         if (isSink) {
             if (resRhs >= 0 && resLhs >= 0) {
                 ans.get().Put(true, static_cast<uint64_t>(resLhs), static_cast<uint64_t>(resRhs));
@@ -120,6 +120,7 @@ void FindTopologyOutputs2(Topology const& t, uint8_t bits, bs::BitSet<2>& ans, s
 
 template<size_t N>
 void FindAllOutputsBulk(size_t maxBits, std::function<void(ProgressEvent const&)> func, std::vector<Topology> const& topologies, bs::BitSet<N>& out) {
+    L().AttrU64("cnt", topologies.size()).AttrS("engine", "beta").Log("Starting");
     size_t processed = 0;
     std::vector<std::conditional_t<N == 1, uint64_t, std::pair<int64_t, int64_t>>> buf;
     buf.resize(kMaxExplicitNodeCount + kMaxInCount);

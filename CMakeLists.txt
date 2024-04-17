@@ -63,6 +63,8 @@ target_sources(
         pkg/BruteForce/config.cpp
         pkg/BruteForce/isomorphism_filter.cpp
         pkg/BruteForce/isomorphism_key.cpp
+        pkg/BruteForce/params.cpp
+        pkg/BruteForce/stress.cpp
         pkg/BruteForce/topology.cpp
         pkg/BruteForce/alpha/engine.cpp
         pkg/BruteForce/alpha/eval_topology.cpp
@@ -85,6 +87,9 @@ add_executable(Test ut/graph_test.cpp ut/csd_test.cpp ut/csd_solver_test.cpp ut/
 target_sources(Test PRIVATE ut/find_all_outputs_test.cpp)
 #target_sources(ut PRIVATE ut/testk_test.cpp)
 target_link_libraries(Test PRIVATE Catch2::Catch2WithMain Core BruteForce Log)
+
+enable_testing()
+add_test(NAME MainTests COMMAND Test)
 
 install(TARGETS FindAllOutputs DESTINATION bin CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
