@@ -12,7 +12,7 @@
 #include <vector>
 
 
-static Logger L = GetLogger("bruteforce-test");
+static logger::Logger L = logger::Get("bruteforce-test");
 
 static bf::OutputConfig CONFIG_ALPHA = []{
     bf::OutputConfig c;

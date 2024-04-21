@@ -52,6 +52,18 @@ public:
         return *mDesc;
     }
 
+    void Bind(Target* ref) {
+        CheckInit();
+        if (mDesc->IsObj()) {
+            mDesc->AsObj().ref = ref;
+        } else if (mDesc->IsEnum()) {
+            mDesc->AsEnum().ref = ref;
+        } else if (mDesc->IsBool()) {
+        } else {
+            std::abort();
+        }
+    }
+
     void IsObject() override {
         CheckUninit();
         mDesc.emplace(ObjDesc{});

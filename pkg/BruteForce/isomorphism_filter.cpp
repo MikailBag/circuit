@@ -4,7 +4,7 @@
 
 #include "log/log.h"
 
-static Logger L = GetLogger("bf.iso.filter");
+static logger::Logger L = logger::Get("bf.iso.filter");
 
 namespace bf::iso {
 

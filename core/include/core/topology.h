@@ -2,7 +2,14 @@
 
 #include <array>
 #include <cstdint>
+#include <span>
+#include <string>
+#include <vector>
 
 struct TopologyNode {
     std::array<uint8_t, 2> links;
+
 };
+
+
+std::vector<std::string> DescribeTopology(std::span<TopologyNode const> topology, size_t inputCount);

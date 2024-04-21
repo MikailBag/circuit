@@ -14,7 +14,7 @@ using namespace std::string_literals;
 
 
 
-static Logger L = GetLogger("simple-builder");
+static logger::Logger L = logger::Get("simple-builder");
 
 SimpleBuilder::SimpleBuilder() = default;
 

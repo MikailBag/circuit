@@ -7,9 +7,7 @@
 #include "log/log.h"
 
 
-
-
-static Logger L = GetLogger("bf.alpha");
+static logger::Logger L = logger::Get("bf.alpha");
 
 namespace bf::alpha {
 template<size_t N>

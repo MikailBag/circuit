@@ -10,7 +10,7 @@
 
 #include <iostream>
 
-static Logger L = GetLogger("csd");
+static logger::Logger L = logger::Get("csd");
 
 
 

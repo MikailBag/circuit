@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   tiny:
-    image: "cr.yandex/crp8j4r52de87520rrk6/bf:v3"
+    image: "cr.yandex/crp8j4r52de87520rrk6/bf:v4"
     command:
       - 'find-all-outputs-debug'
       - '--node-count'
@@ -12,7 +12,7 @@ services:
       - '(output=[beta:()])'
     restart: none
   app5s:
-    image: "cr.yandex/crp8j4r52de87520rrk6/bf:v3"
+    image: "cr.yandex/crp8j4r52de87520rrk6/bf:v4"
     command:
       - 'find-all-outputs-release'
       - '--node-count'
@@ -23,7 +23,7 @@ services:
       - '(filter=(unsafe=true),output=[beta:()])'
     restart: none
   app5l:
-    image: "cr.yandex/crp8j4r52de87520rrk6/bf:v3"
+    image: "cr.yandex/crp8j4r52de87520rrk6/bf:v4"
     command:
       - 'find-all-outputs-release'
       - '--node-count'
@@ -34,7 +34,7 @@ services:
       - '(filter=(unsafe=true),output=[beta:()])'
     restart: none
   app6s:
-    image: "cr.yandex/crp8j4r52de87520rrk6/bf:v3"
+    image: "cr.yandex/crp8j4r52de87520rrk6/bf:v4"
     command:
       - 'find-all-outputs-release'
       - '--node-count'
@@ -45,7 +45,7 @@ services:
       - '(filter=(unsafe=true),output=[beta:()])'
     restart: none
   app6l:
-    image: "cr.yandex/crp8j4r52de87520rrk6/bf:v3"
+    image: "cr.yandex/crp8j4r52de87520rrk6/bf:v4"
     command:
       - 'find-all-outputs-release'
       - '--node-count'

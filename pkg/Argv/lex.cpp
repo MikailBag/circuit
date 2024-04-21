@@ -7,7 +7,7 @@
 #include <string_view>
 
 
-static Logger L = GetLogger("argparser.lex");
+static logger::Logger L = logger::Get("argparser.lex");
 
 namespace argparser::lexer {
 

@@ -13,7 +13,10 @@ struct BoolDesc {
     bool* field;
 };
 
+using ErasedPostprocessFunc = void(*)(void*);
+
 struct ObjDesc {
+    Target* ref;
     std::map<std::string, Desc> fields;
 };
 
@@ -24,6 +27,7 @@ struct EnumVariant {
 };
 
 struct EnumDesc {
+    Target* ref;
     std::map<std::string, EnumVariant> variants;
 };
 

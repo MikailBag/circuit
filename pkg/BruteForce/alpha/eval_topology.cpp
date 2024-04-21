@@ -7,7 +7,7 @@
 #include <cassert>
 
 
-static Logger L = GetLogger("bf.alpha.topeval");
+static logger::Logger L = logger::Get("bf.alpha.topeval");
 
 namespace bf::alpha {
 void PushShifts1(bs::BitSet<1>& v) {

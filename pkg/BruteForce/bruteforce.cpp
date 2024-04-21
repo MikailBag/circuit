@@ -2,11 +2,9 @@
 #include "bruteforce/topology.h"
 
 #include "bitset.h"
+#include "engine_launch.h"
 #include "isomorphism_filter.h"
 #include "isomorphism_key.h"
-
-#include "alpha/engine.h"
-#include "beta/engine.h"
 
 #include "log/log.h"
 
@@ -16,11 +14,10 @@
 #include <vector>
 
 
-
 namespace bf {
 namespace {
 
-static Logger L = GetLogger("bf");
+static logger::Logger L = logger::Get("bf");
 
 void GoStep(FindTopologyParams const& p, Topology const& g, std::vector<Topology>& out) {
     for (size_t i = 0; i < g.nodes.size() + p.inputCount; ++i) {
@@ -102,27 +99,24 @@ std::vector<Topology> FilterTopologies(FilterParams const& p, std::vector<Topolo
 
 std::vector<uint64_t> FindAllOutputs(FindOutputsParams const& p, std::vector<Topology> const& topologies) {
     ValidateFindOutputParams(p);
-    size_t maxNum = static_cast<size_t>(1) << static_cast<size_t>(p.maxBits);
+    
     std::vector<uint64_t> ans;
+    EngineParams ep {p.config};
+    ep.inputCount = p.inputCount;
+    ep.maxExplicitNodeCount = p.maxExplicitNodeCount;
+    ep.maxBits = p.maxBits;
+    ep.progressListener = p.progressListener;
     if (p.inputCount == 1) {
-        bs::BitSet<1> out =  bs::BitSet{std::array{maxNum+1}};
-        if (p.config.isAlpha) {
-            alpha::FindAllOutputsBulk<1>(p.maxBits, p.maxExplicitNodeCount, p.progressListener, topologies, out);
-        } else if (p.config.isBeta) {
-            beta::FindAllOutputsBulk<1>(p.maxBits, p.progressListener, topologies, out);
-        }
+        bs::BitSet<1> out = PrepareBitset1(p.maxBits);
+        InvokeEngine(ep, topologies, &out, nullptr);
         for (size_t i = 0; i < out.size()[0]; ++i) {
             if (out.At(i)) {
                 ans.push_back(static_cast<uint64_t>(i));
             }
         }
     } else if (p.inputCount == 2) {
-        bs::BitSet<2> out = bs::BitSet{std::array{maxNum+1, maxNum+1}};
-        if (p.config.isAlpha) {
-            alpha::FindAllOutputsBulk<2>(p.maxBits, p.maxExplicitNodeCount, p.progressListener, topologies, out);
-        } else if (p.config.isBeta) {
-            beta::FindAllOutputsBulk<2>(p.maxBits, p.progressListener, topologies, out);
-        }
+        bs::BitSet<2> out = PrepareBitset2(p.maxBits);
+        InvokeEngine(ep, topologies, nullptr, &out);
         for (size_t i = 0; i < out.size()[0]; i++) {
             for (size_t j = 0; j < out.size()[1]; j++) {
                 if (out.At(i, j)) {

@@ -7,5 +7,12 @@
 #include <vector>
 
 namespace bf {
-std::optional<size_t> Compare(FindOutputsParams const& left, FindOutputsParams const& right, std::vector<Topology> const& topologies);
+struct Mismatch {
+    size_t topologyIndex = SIZE_MAX;
+    std::vector<uint64_t> output;
+    bool leftResult = false;
+    bool rightResult = false;
+};
+[[nodiscard]]
+std::optional<Mismatch> Compare(FindOutputsParams const& left, FindOutputsParams const& right, std::vector<Topology> const& topologies);
 }

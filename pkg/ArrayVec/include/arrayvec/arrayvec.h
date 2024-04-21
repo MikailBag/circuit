@@ -3,6 +3,7 @@
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <span>
 #include <utility>
 
 namespace arrayvec {
@@ -87,6 +88,14 @@ public:
             assert(idx < mSize);
         }
         return *mSlots[idx].Ptr();
+    }
+
+    std::span<T const> span() const {
+        return std::span{std::launder(reinterpret_cast<T const*>(mSlots.data())), mSize};
+    }
+
+    std::span<T> span() {
+        return std::span{std::launder(reinterpret_cast<T*>(mSlots.data())), mSize};
     }
 
     ~ArrayVec() {

@@ -4,6 +4,7 @@
 #include "error.h"
 
 #include <cassert>
+#include <cstdlib>
 #include <set>
 #include <string>
 #include <vector>
@@ -153,6 +154,47 @@ void ParseImpl(ErrorState& es, std::string_view data, Desc& d) {
         assert(false);
     }
 }
+
+void PostprocessImpl(ErrorState& es, Desc& d);
+
+void InvokePostprocess(ErrorState& es, Target& t) {
+    try {
+        t.Postprocess();
+    } catch (BindingException const& ex) {
+        es.Err(ex.what());
+    }
+}
+
+void PostprocessObj(ErrorState& es, ObjDesc& t) {
+    for (auto& [name, field] : t.fields) {
+        Guard g {es, std::string{name}};
+        PostprocessImpl(es, field);
+    }
+    InvokePostprocess(es, *t.ref);
+}
+
+void PostprocessEnum(ErrorState& es, EnumDesc& t) {
+    for (auto& [name, var] : t.variants) {
+        if (!*var.flag) {
+            continue;
+        }
+        Guard g {es, std::string{name}};
+        PostprocessImpl(es, *var.content);
+    }
+    InvokePostprocess(es, *t.ref);
+}
+
+void PostprocessImpl(ErrorState& es, Desc& d) {
+    if (d.IsObj()) {
+        PostprocessObj(es, d.AsObj());
+    } else if (d.IsEnum()) {
+        PostprocessEnum(es, d.AsEnum());
+    } else if (d.IsBool()) {
+    } else {
+        std::abort();
+    }
+}
+
 }
 
 void Parse(std::string_view data, Target& t) {

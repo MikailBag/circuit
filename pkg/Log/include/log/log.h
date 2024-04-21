@@ -6,6 +6,7 @@
 #include <cstdint>
 
 #include "log/detail/config.h"
+namespace logger {
 
 class [[nodiscard]] LogEvent final  {
     friend class Logger;
@@ -67,4 +68,5 @@ private:
 };
 
 
-Logger GetLogger(std::string_view caller);
+Logger Get(std::string_view caller);
+}

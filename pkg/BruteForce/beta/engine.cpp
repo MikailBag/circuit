@@ -8,7 +8,7 @@
 #include <stdexcept>
 
 
-static Logger L = GetLogger("bf.beta");
+static logger::Logger L = logger::Get("bf.beta");
 
 namespace bf::beta {
 namespace {

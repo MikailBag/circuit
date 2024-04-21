@@ -12,7 +12,7 @@
 #include <string_view>
 #include <variant>
 
-static Logger L = GetLogger("argparser");
+static logger::Logger L = logger::Get("argparser");
 
 namespace argparser {
 namespace {

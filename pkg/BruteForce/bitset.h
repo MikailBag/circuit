@@ -47,20 +47,54 @@ public:
     }
 
     void ApplyPointwiseOr(BitSet const& other) {
-        if (mSz != other.mSz) {
-            throw std::runtime_error("incompatible sizes");
-        }
-        for (size_t i = 0; i < mInner.size(); ++i) {
+        CheckSameSizeAs(other);
+        size_t sz = mInner.size();
+        for (size_t i = 0; i < sz; ++i) {
             if (other.mInner[i]) {
                 mInner[i] = true;
             }
         }
     }
 
-   
+    void ApplyPointwiseXor(BitSet const& other) {
+        CheckSameSizeAs(other);
+        size_t sz = mInner.size();
+        for (size_t i = 0; i < sz; ++i) {
+            if (other.mInner[i]) {
+                mInner[i] = !mInner[i];
+            }
+        }
+    }
 
-    
+    SizeT FindOne() {
+        static_assert(NDimensionCount == 1 || NDimensionCount == 2, "TODO");
+        if constexpr (NDimensionCount == 1) {
+            for (size_t i = 0; i < mSz[0]; i++) {
+                if (mInner[i]) {
+                    return {i};
+                }
+            }
+        } else if (NDimensionCount == 2) {
+            for (size_t i = 0; i < mSz[0]; i++) {
+                for (size_t j = 0; j < mSz[1]; j++) {
+                    if (At(i, j)) {
+                        return {i, j};
+                    }
+                }
+            }
+        } else {
+            std::abort();
+        }
+        throw std::runtime_error("bitset is filled with false");
+    }
+
+    friend auto operator<=>(BitSet const& lhs, BitSet const& rhs) = default;
 private:
+    void CheckSameSizeAs(BitSet const& other) {
+        if (mSz != other.mSz) {
+            throw std::runtime_error("incompatible sizes");
+        }
+    }
     static size_t Mul(SizeT sizes) {
         size_t res = 1;
         for (size_t x : sizes) {

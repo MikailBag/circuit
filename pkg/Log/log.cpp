@@ -1,13 +1,17 @@
 #include "log/log.h"
 
+#include "filter.h"
+
 #include <iostream>
 #include <mutex>
 #include <string>
-#include <set>
+//#include <set>
 
 using namespace std::string_literals;
-
-static std::mutex gLoggingLock;
+namespace logger {
+namespace {
+std::mutex gLoggingLock;
+}
 
 void LogEvent::AttrU64Impl(std::string_view key, uint64_t value) {
     mKvPairs.emplace_back(key, value);
@@ -45,37 +49,12 @@ LogEvent Logger::operator()() const {
 
 namespace {
 struct LoggingConfig {
-    std::set<std::string> disabledLoggers;
-    bool disableAllLoggers = false;
+    std::unique_ptr<logger::Filter> filter;
 
-    void AddDisabledLoggerSpec(std::string_view spec) {
-        if (spec == "ALL") {
-            disableAllLoggers = true;
-        } else {
-            disabledLoggers.emplace(spec);
-        }
-    }
 };
 
-LoggingConfig ParseDisabledLoggers(std::string_view spec) {
-    LoggingConfig cfg;
-    while (true) {
-        size_t pos = spec.find_first_of(',');
-        if (pos == std::string_view::npos) {
-            if (!spec.empty()) {
-                cfg.AddDisabledLoggerSpec(spec);
-            }
-            break;
-        }
-        cfg.AddDisabledLoggerSpec(spec.substr(0, pos));
-        spec = spec.substr(pos+1);
-    }
-    return cfg;
-}
 
-}
-
-static std::string GetEnv(std::string const& name) {
+std::string GetEnv(std::string const& name) {
     char* s = std::getenv(name.c_str());
     if (s == nullptr) {
         return {};
@@ -83,21 +62,32 @@ static std::string GetEnv(std::string const& name) {
     return {s};
 }
 
+LoggingConfig LoadConfig() {
+    LoggingConfig c;
+    c.filter = Filter::Parse(GetEnv("LOG_DISABLE"));
+    return c;
+}
+
+}
+
+
 class GetLoggerH {
 public:
-    static bool IsEnabled([[maybe_unused]] std::string const& caller) {
-        static LoggingConfig conf = ParseDisabledLoggers(GetEnv("LOG_DISABLE"));
-        return !conf.disableAllLoggers && conf.disabledLoggers.count(caller) == 0;
-    }
     static Logger GetLoggerImpl(std::string caller) {
         Logger l;
         l.mPrefix = "["s + caller + "] ";
         l.mEnabled = IsEnabled(caller);
         return l;
     }
+private:
+    static bool IsEnabled(std::string const& caller) {
+        static LoggingConfig conf = LoadConfig();
+        return conf.filter->Enabled(caller);
+    }
 };
 
 
-Logger GetLogger(std::string_view caller) {
+Logger Get(std::string_view caller) {
     return GetLoggerH::GetLoggerImpl(std::string(caller));
+}
 }

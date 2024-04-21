@@ -86,6 +86,12 @@ resource "yandex_compute_instance_group" "main" {
         scheduling_policy {
             preemptible = false
         }
+        metadata_options {
+            aws_v1_http_endpoint = 0
+            aws_v1_http_token    = 0
+            gce_http_endpoint    = 1
+            gce_http_token       = 1
+        }
 
     }
     scale_policy {

@@ -11,7 +11,7 @@
 
 
 namespace {
-Logger L = GetLogger("simple-solver");
+logger::Logger L = logger::Get("simple-solver");
 
 class SimpleSolver : public Solver {
 public:
