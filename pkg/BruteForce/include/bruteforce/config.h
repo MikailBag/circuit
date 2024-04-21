@@ -46,7 +46,7 @@ struct OutputConfig : public conf::Target {
     }
 };
 struct FilterConfig : public conf::Target {
-    bool unsafe;
+    bool unsafe = false;
 
     void Describe(conf::Description& desc) override {
         desc.IsObject();
@@ -55,6 +55,19 @@ struct FilterConfig : public conf::Target {
 
     void Postprocess() override {
     }
+};
+
+struct LaunchConfig : public conf::Target {
+    bool parallel = false;
+    size_t threadCount = 8; // TODO
+    size_t chunkSize = 10; // TODO
+
+    void Describe(conf::Description& desc) override {
+        desc.IsObject();
+        desc.BoolField("parallel", parallel);
+    }
+
+    void Postprocess() override;
 };
 struct Config: public conf::Target {
     FilterConfig filter;

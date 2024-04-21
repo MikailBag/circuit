@@ -108,7 +108,7 @@ std::vector<uint64_t> FindAllOutputs(FindOutputsParams const& p, std::vector<Top
     ep.progressListener = p.progressListener;
     if (p.inputCount == 1) {
         bs::BitSet<1> out = PrepareBitset1(p.maxBits);
-        InvokeEngine(ep, topologies, &out, nullptr);
+        InvokeEngine(ep, p.launchConfig, topologies, &out, nullptr);
         for (size_t i = 0; i < out.size()[0]; ++i) {
             if (out.At(i)) {
                 ans.push_back(static_cast<uint64_t>(i));
@@ -116,7 +116,7 @@ std::vector<uint64_t> FindAllOutputs(FindOutputsParams const& p, std::vector<Top
         }
     } else if (p.inputCount == 2) {
         bs::BitSet<2> out = PrepareBitset2(p.maxBits);
-        InvokeEngine(ep, topologies, nullptr, &out);
+        InvokeEngine(ep, p.launchConfig, topologies, nullptr, &out);
         for (size_t i = 0; i < out.size()[0]; i++) {
             for (size_t j = 0; j < out.size()[1]; j++) {
                 if (out.At(i, j)) {

@@ -128,6 +128,7 @@ private:
 Desc Describe(Target& t) {
     DescColl coll;
     t.Describe(coll);
+    coll.Bind(&t);
     return coll.Unpack();
 }
 

@@ -16,7 +16,10 @@ struct EngineParams {
 
     explicit EngineParams(OutputConfig const& c) : config(c) {} 
 };
+
+
+void InvokeEngine(EngineParams const& ep, LaunchConfig const& lp, std::vector<Topology> const& topologies, bs::BitSet<1>* out1, bs::BitSet<2>* out2);
+
 bs::BitSet<1> PrepareBitset1(uint8_t maxBits);
 bs::BitSet<2> PrepareBitset2(uint8_t maxBits);
-void InvokeEngine(EngineParams const& p, std::vector<Topology> const& topologies, bs::BitSet<1>* out1, bs::BitSet<2>* out2);
 }

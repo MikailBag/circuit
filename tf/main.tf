@@ -25,11 +25,6 @@ module "prepare-ig" {
     source = "../../mycloud/lib/instancegroups-shared"
     folder_id = var.folder_id
 }
-
-data "yandex_compute_image" "ubuntu" {
-  family = "container-optimized-image"
-}
-
 resource "yandex_vpc_network" "main" {
     labels = {
         "managed-by" = "tf"
@@ -56,54 +51,16 @@ resource "yandex_container_repository_iam_binding" "pull" {
     members = ["serviceAccount:${yandex_iam_service_account.vm.id}"]
 }
 
-resource "yandex_compute_instance_group" "main" {
-    service_account_id = module.prepare-ig.service_account_id
-    labels = {
-        "managed-by" = "tf"
-    }
-    name = "my"
-    instance_template {
-        service_account_id = yandex_iam_service_account.vm.id
-        resources {
-            cores = 4
-            memory = 4
-        }
-        network_interface {
-            subnet_ids = [yandex_vpc_subnet.main.id]
-            nat = true
-        }
-        boot_disk {
-            initialize_params {
-                size = "15"
-                type = "network-hdd"
-                image_id = data.yandex_compute_image.ubuntu.id
-            }
-        }
-        metadata = {
-            "enable-oslogin" = "true"
-            "docker-compose" = file("${path.module}/spec.yaml")
-        }
-        scheduling_policy {
-            preemptible = false
-        }
-        metadata_options {
-            aws_v1_http_endpoint = 0
-            aws_v1_http_token    = 0
-            gce_http_endpoint    = 1
-            gce_http_token       = 1
-        }
+moved {
+  from = yandex_compute_instance_group.main
+  to = module.run.yandex_compute_instance_group.main
+}
 
-    }
-    scale_policy {
-        fixed_scale {
-            size = 1
-        }
-    }
-    deploy_policy {
-        max_expansion = 1
-        max_unavailable = 1
-    }
-    allocation_policy {
-        zones = ["ru-central1-a"]
-    }
+module "run" {
+    source = "./modules/job"
+    ig_service_account_id = module.prepare-ig.service_account_id
+    vm_service_account_id = yandex_iam_service_account.vm.id
+    spec = file("${path.module}/spec.yaml")
+    subnet_id = yandex_vpc_subnet.main.id
+    name = "my"
 }

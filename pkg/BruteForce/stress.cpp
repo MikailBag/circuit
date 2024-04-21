@@ -24,8 +24,8 @@ std::optional<Mismatch> Compare(FindOutputsParams const& left, FindOutputsParams
         for (size_t i = 0; i < topologies.size(); i++) {
             tmp.clear();
             tmp.push_back(topologies[i]);
-            InvokeEngine(epLeft, tmp, &resultLeft, nullptr);
-            InvokeEngine(epRight, tmp, &resultRight, nullptr);
+            InvokeEngine(epLeft, left.launchConfig, tmp, &resultLeft, nullptr);
+            InvokeEngine(epRight, right.launchConfig, tmp, &resultRight, nullptr);
             if (resultLeft != resultRight) {
                 Mismatch m;
                 m.topologyIndex = i;

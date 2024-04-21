@@ -22,14 +22,17 @@ int main(int argc, char** argv) {
     pc.AddOption("filter-config").DefaultValue("()");
     pc.AddOption("left-config").DefaultValue("[alpha:()]");
     pc.AddOption("right-config").DefaultValue("[beta:()]");
+    pc.AddOption("launch-config").DefaultValue("(parallel=true)");
     std::map<std::string, std::string> opts = pc.ParseArgv(argc, argv);
     bf::OutputConfig leftConfig;
     bf::OutputConfig rightConfig;
     bf::FilterConfig filterConfig;
+    bf::LaunchConfig launchConfig;
     std::cout << "Using configs: " << std::endl;
     std::cout << "Filter: " << opts["filter-config"] << std::endl;
     std::cout << "Left: " << opts["left-config"] << std::endl;
     std::cout << "Right: " << opts["right-config"] << std::endl;
+    std::cout << "Launch: " << opts["launch-config"] << std::endl;
     try {
         conf::Parse(opts["left-config"], leftConfig);
     } catch (conf::ParseException const& ex) {
@@ -43,12 +46,19 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    try {
+        conf::Parse(opts["launch-config"], launchConfig);
+    } catch (conf::ParseException const& ex) {
+        std::cerr << "Invalid launch config: " << ex.what() << std::endl;
+        return 1;
+    }
+
     bf::FindTopologyParams tp;
     tp.inputCount = std::stoi(opts["input-count"]);
     tp.explicitNodeCountLimit = std::stoi(opts["node-count"]);
 
-    bf::FindOutputsParams opLeft {leftConfig};
-    bf::FindOutputsParams opRight {rightConfig};
+    bf::FindOutputsParams opLeft {leftConfig, launchConfig};
+    bf::FindOutputsParams opRight {rightConfig, launchConfig};
     opLeft.maxBits = opRight.maxBits = std::stoi(opts["bits"]);
     opLeft.maxExplicitNodeCount = opRight.maxExplicitNodeCount = tp.explicitNodeCountLimit;
     opLeft.inputCount = opRight.inputCount = tp.inputCount;

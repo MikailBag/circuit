@@ -119,7 +119,7 @@ void FindTopologyOutputs2(Topology const& t, uint8_t bits, bs::BitSet<2>& ans, s
 }
 
 template<size_t N>
-void FindAllOutputsBulk(size_t maxBits, std::function<void(ProgressEvent const&)> func, std::vector<Topology> const& topologies, bs::BitSet<N>& out) {
+void FindAllOutputsBulk(size_t maxBits, std::function<void(ProgressEvent const&)> func, std::span<Topology const> topologies, bs::BitSet<N>& out) {
     L().AttrU64("cnt", topologies.size()).AttrS("engine", "beta").Log("Starting");
     size_t processed = 0;
     std::vector<std::conditional_t<N == 1, uint64_t, std::pair<int64_t, int64_t>>> buf;
@@ -143,7 +143,7 @@ void FindAllOutputsBulk(size_t maxBits, std::function<void(ProgressEvent const&)
     }
 }
 
-template void FindAllOutputsBulk<1>(size_t, std::function<void(ProgressEvent const&)>, std::vector<Topology> const&, bs::BitSet<1>&);
-template void FindAllOutputsBulk<2>(size_t, std::function<void(ProgressEvent const&)>, std::vector<Topology> const&, bs::BitSet<2>&);
+template void FindAllOutputsBulk<1>(size_t, std::function<void(ProgressEvent const&)>, std::span<Topology const>, bs::BitSet<1>&);
+template void FindAllOutputsBulk<2>(size_t, std::function<void(ProgressEvent const&)>, std::span<Topology const>, bs::BitSet<2>&);
 
 }

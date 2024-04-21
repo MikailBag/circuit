@@ -19,13 +19,23 @@ int main(int argc, char** argv) {
     pc.AddOption("bits").DefaultValue("3");
     pc.AddOption("input-count").DefaultValue("2");
     pc.AddOption("config").DefaultValue("()");
+    pc.AddOption("launch-config").DefaultValue("()");
     std::map<std::string, std::string> opts = pc.ParseArgv(argc, argv);
     bf::Config config;
+    std::cout << "Using engine config: " << opts["config"] << std::endl;
     try {
-        std::cout << "Using engine config: " << opts["config"] << std::endl;
         conf::Parse(opts["config"], config);
     } catch (conf::ParseException const& ex) {
         std::cerr << "Invalid config: " << ex.what() << std::endl;
+        return 1;
+    }
+
+    std::cout << "Using launch config: " << opts["launch-config"] << std::endl;
+    bf::LaunchConfig launchConfig;
+        try {
+        conf::Parse(opts["launch-config"], launchConfig);
+    } catch (conf::ParseException const& ex) {
+        std::cerr << "Invalid launch config: " << ex.what() << std::endl;
         return 1;
     }
 
@@ -33,7 +43,7 @@ int main(int argc, char** argv) {
     tp.inputCount = std::stoi(opts["input-count"]);
     tp.explicitNodeCountLimit = std::stoi(opts["node-count"]);
 
-    bf::FindOutputsParams op {config.output};
+    bf::FindOutputsParams op {config.output, launchConfig};
     op.maxBits = std::stoi(opts["bits"]);
     op.maxExplicitNodeCount = tp.explicitNodeCountLimit;
     op.inputCount = tp.inputCount;

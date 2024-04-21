@@ -33,7 +33,7 @@ struct ErrorState {
         path.pop_back();
     }
 
-    bool Finalize() const {
+    bool IsEmpty() const {
         assert(path.empty());
         return errors.empty();
     }
@@ -201,7 +201,12 @@ void Parse(std::string_view data, Target& t) {
     Desc d = Describe(t);
     ErrorState es;
     ParseImpl(es, data, d);
-    if (!es.Finalize()) {
+    
+    if (!es.IsEmpty()) {
+        throw MakeException(es.errors);
+    }
+    PostprocessImpl(es, d);
+    if (!es.IsEmpty()) {
         throw MakeException(es.errors);
     }
 }

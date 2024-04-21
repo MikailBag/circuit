@@ -22,12 +22,13 @@ struct FilterParams {
 
 struct FindOutputsParams {
     OutputConfig const& config;
+    LaunchConfig const& launchConfig;
     uint8_t maxBits = 0;
     size_t maxExplicitNodeCount = 0;
     size_t inputCount = 0;
     std::function<void(ProgressEvent const&)> progressListener;
 
-    explicit FindOutputsParams(OutputConfig const& c) : config(c) {}
+    FindOutputsParams(OutputConfig const& c, LaunchConfig const& lc) : config(c), launchConfig(lc) {}
 };
 
 }
