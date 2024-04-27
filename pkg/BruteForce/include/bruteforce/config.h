@@ -15,10 +15,12 @@ struct OutputAlphaConfig: public conf::Target {
 };
 struct OutputBetaConfig : public conf::Target {
     bool skipValidation = false;
+    bool forceDummy = false;
 
     void Describe(conf::Description& desc) override {
         desc.IsObject();
         desc.BoolField("skip_validation", skipValidation);
+        desc.BoolField("force_dummy", forceDummy);
     }
 
     void Postprocess() override {

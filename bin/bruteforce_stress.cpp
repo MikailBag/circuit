@@ -16,8 +16,8 @@
 
 int main(int argc, char** argv) {
     argparser::Parser pc;
-    pc.AddOption("node-count").DefaultValue("4");
-    pc.AddOption("bits").DefaultValue("3");
+    pc.AddOption("node-count").DefaultValue("5");
+    pc.AddOption("bits").DefaultValue("4");
     pc.AddOption("input-count").DefaultValue("1");
     pc.AddOption("filter-config").DefaultValue("()");
     pc.AddOption("left-config").DefaultValue("[alpha:()]");

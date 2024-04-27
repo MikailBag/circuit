@@ -11,8 +11,8 @@ resource "yandex_compute_instance_group" "main" {
     instance_template {
         service_account_id = var.vm_service_account_id
         resources {
-            cores = 4
-            memory = 4
+            cores = 32
+            memory = 32
         }
         network_interface {
             subnet_ids = [var.subnet_id]

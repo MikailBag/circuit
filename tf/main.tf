@@ -56,11 +56,17 @@ moved {
   to = module.run.yandex_compute_instance_group.main
 }
 
+moved {
+  from = module.run
+  to = module.run[""]
+}
+
 module "run" {
+    for_each = toset(["", "-honest"])
     source = "./modules/job"
     ig_service_account_id = module.prepare-ig.service_account_id
     vm_service_account_id = yandex_iam_service_account.vm.id
-    spec = file("${path.module}/spec.yaml")
+    spec = templatefile("${path.module}/spec${each.key}.yaml", {"version" = "v7"})
     subnet_id = yandex_vpc_subnet.main.id
-    name = "my"
+    name = "my${each.key}"
 }

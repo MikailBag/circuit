@@ -63,22 +63,45 @@ private:
     std::span<Topology const> mRemaining;
 };
 
-void InvokeEngineImpl(Engine const& engine, std::vector<Topology> const& topologies, LaunchConfig const& lp, bs::BitSet<1>* out1, bs::BitSet<2>* out2) {
+void InvokeEngineImpl(Engine const& engine, std::vector<Topology> const& topologies, LaunchConfig const& lp, bs::BitSet<1>* out1, bs::BitSet<2>* out2, size_t maxBits, size_t inputCount) {
     if (!lp.parallel) {
         L().AttrU64("tasks", topologies.size()).Log("Starting single-thread engine");
-    
         engine.Run(topologies, out1, out2);
         return;
     }
     L().AttrU64("threads", lp.threadCount).AttrU64("chunkSize", lp.chunkSize).AttrU64("tasks", topologies.size()).Log("Starting parallel engine");
     WorkScheduler sched(lp.chunkSize, topologies);
     std::vector<std::jthread> workers;
+    std::mutex joinMu;
     for (size_t i = 0; i < lp.threadCount; i++) {
-        workers.emplace_back([sched = &sched](std::stop_token stop){
+        workers.emplace_back([
+            joinMu=&joinMu,
+            index=i,
+            inputCount=inputCount,
+            sched = &sched,
+            engine=&engine,
+            maxBits,
+            out1,
+            out2](std::stop_token stop){
+            bs::BitSet<1> interm1 = PrepareBitset1(maxBits);
+            bs::BitSet<2> interm2 = PrepareBitset2(maxBits);
+            L().AttrU64("index", index).Log("Starting worker");
             while (!stop.stop_requested()) {
                 std::optional<std::span<Topology const>> items = sched->NextTask();
                 if (!items) {
                     break;
+                }
+                engine->Run(*items, &interm1, &interm2);
+            }
+            L().AttrU64("index", index).Log("Finishing worker");
+            {
+                std::lock_guard lk {*joinMu};
+                if (inputCount == 1) {
+                    out1->ApplyPointwiseOr(interm1);
+                } else if (inputCount == 2) {
+                    out2->ApplyPointwiseOr(interm2);
+                } else {
+                    std::abort();
                 }
             }
         });
@@ -95,24 +118,22 @@ void InvokeEngine(EngineParams const& ep, LaunchConfig const& lp, std::vector<To
         if (ep.config.isAlpha) {
             InvokeEngineImpl(FnEngine{[ep = &ep](std::span<Topology const> topologies, bs::BitSet<1>* out1, [[maybe_unused]] bs::BitSet<2>* out2){
                 alpha::FindAllOutputsBulk<1>(ep->maxBits, ep->maxExplicitNodeCount, ep->progressListener, topologies, *out1);
-            }}, topologies, lp, out1, out2);
-            
+            }}, topologies, lp, out1, out2, ep.maxBits, ep.inputCount);
         } else if (ep.config.isBeta) {
             InvokeEngineImpl(FnEngine{[ep = &ep](std::span<Topology const> topologies, bs::BitSet<1>* out1, [[maybe_unused]] bs::BitSet<2>* out2){
-                beta::FindAllOutputsBulk<1>(ep->maxBits, ep->progressListener, topologies, *out1);
-            }}, topologies, lp, out1, out2);
+                beta::FindAllOutputsBulk<1>(ep->maxBits, ep->progressListener, topologies, *out1, ep->config.beta);
+            }}, topologies, lp, out1, out2, ep.maxBits, ep.inputCount);
         }
     } else if (ep.inputCount == 2) {
         assert(out2 != nullptr);
         if (ep.config.isAlpha) {
             InvokeEngineImpl(FnEngine{[ep = &ep](std::span<Topology const> topologies, [[maybe_unused]] bs::BitSet<1>* out1, bs::BitSet<2>* out2){
                 alpha::FindAllOutputsBulk<2>(ep->maxBits, ep->maxExplicitNodeCount, ep->progressListener, topologies, *out2);
-            }}, topologies, lp, out1, out2);
-            
+            }}, topologies, lp, out1, out2, ep.maxBits, ep.inputCount);
         } else if (ep.config.isBeta) {
             InvokeEngineImpl(FnEngine{[ep = &ep](std::span<Topology const> topologies, [[maybe_unused]] bs::BitSet<1>* out1, bs::BitSet<2>* out2) {
-                beta::FindAllOutputsBulk<2>(ep->maxBits, ep->progressListener, topologies, *out2);
-            }}, topologies, lp, out1, out2);
+                beta::FindAllOutputsBulk<2>(ep->maxBits, ep->progressListener, topologies, *out2, ep->config.beta);
+            }}, topologies, lp, out1, out2, ep.maxBits, ep.inputCount);
         }
     } else {
         std::abort();
