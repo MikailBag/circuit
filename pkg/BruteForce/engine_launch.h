@@ -12,7 +12,7 @@ struct EngineParams {
     uint8_t maxBits;
     // TODO - remove
     size_t maxExplicitNodeCount;
-    std::function<void(ProgressEvent const&)> progressListener;
+    std::function<void()> progressListener;
 
     explicit EngineParams(OutputConfig const& c) : config(c) {} 
 };

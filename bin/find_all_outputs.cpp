@@ -7,10 +7,19 @@
 
 #include "graph.h"
 
+#include <atomic>
+#include <chrono>
+#include <format>
 #include <string>
 #include <iostream>
 #include <memory>
 
+
+namespace {
+std::string Now() {
+    return std::format("{:%Y-%m-%d %H:%M:%S}", std::chrono::system_clock::now());
+}
+}
 
 
 int main(int argc, char** argv) {
@@ -39,51 +48,59 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    bf::FindTopologyParams tp;
-    tp.inputCount = std::stoi(opts["input-count"]);
-    tp.explicitNodeCountLimit = std::stoi(opts["node-count"]);
 
-    bf::FindOutputsParams op {config.output, launchConfig};
-    op.maxBits = std::stoi(opts["bits"]);
-    op.maxExplicitNodeCount = tp.explicitNodeCountLimit;
-    op.inputCount = tp.inputCount;
-    std::cout << "Input count: " << op.inputCount
-              << ", node count: " << tp.explicitNodeCountLimit
-              << ", bits " << static_cast<int>(op.maxBits)
-              << std::endl;
+    size_t maxNodeCount = std::stoi(opts["node-count"]);
+    for (size_t nodeCount = 1; nodeCount <= maxNodeCount; nodeCount++) {
+        bf::FindTopologyParams tp;
+        tp.inputCount = std::stoi(opts["input-count"]);
+        tp.explicitNodeCountLimit = nodeCount;
 
-    std::vector<bf::Topology> topologies = bf::FindAllTopologies(tp);
+        bf::FindOutputsParams op {config.output, launchConfig};
+        op.maxBits = std::stoi(opts["bits"]);
+        op.maxExplicitNodeCount = nodeCount;
+        op.inputCount = tp.inputCount;
+        std::cout << "Input count: " << op.inputCount
+                  << ", node count: " << nodeCount
+                  << ", bits " << static_cast<int>(op.maxBits)
+                  << std::endl;
 
-    std::cout << "Topology count: " << topologies.size() << std::endl;
+        std::vector<bf::Topology> topologies = bf::FindAllTopologies(tp);
 
-    bf::FilterParams fp {config.filter};
-    fp.inputCount = tp.inputCount;
+        std::cout << "Topology count: " << topologies.size() << std::endl;
+
+        bf::FilterParams fp {config.filter};
+        fp.inputCount = tp.inputCount;
 
 
-    std::vector<bf::Topology> uniqueTopologies = bf::FilterTopologies(fp, topologies);
+        std::vector<bf::Topology> uniqueTopologies = bf::FilterTopologies(fp, topologies);
 
-    std::cout << "Unique topology count: " << uniqueTopologies.size() << std::endl;
+        std::cout << "Unique topology count: " << uniqueTopologies.size() << std::endl;
 
-    op.progressListener = [uniqueTopologies = std::cref(uniqueTopologies)](bf::ProgressEvent const& ev) {
-        if (ev.finished % 100 == 0) {
-            std::cout << "Progress: " << ev.finished << " / " << uniqueTopologies.get().size() << std::endl;
-        }
-    };
+        std::atomic<size_t> finishedTasks = 0;
 
-    std::vector<uint64_t> outputs = bf::FindAllOutputs(op, uniqueTopologies);
+        op.progressListener = [uniqueTopologies = std::cref(uniqueTopologies), finishedTasks=&finishedTasks]() {
+            size_t finished = finishedTasks->fetch_add(1, std::memory_order::relaxed);
+            if (finished % 100 == 0) {
+                std::string now = Now();
+                std::cout << "[" << now << "] " << "Progress: " << finished << " / " << uniqueTopologies.get().size() << std::endl;
+            }
+        };
+
+        std::vector<uint64_t> outputs = bf::FindAllOutputs(op, uniqueTopologies);
 
  
-    std::cout << "Possible output count: " << outputs.size() / op.inputCount << std::endl;
-    assert(outputs.size() % op.inputCount == 0);
-    for (size_t i = 0; i < outputs.size(); i += op.inputCount) {
-        std::cout << '(';
-        for (size_t j = 0; j < op.inputCount; j++) {
-            if (j > 0) {
-                std::cout << ' ';
+        std::cout << "Possible output count: " << outputs.size() / op.inputCount << std::endl;
+        assert(outputs.size() % op.inputCount == 0);
+        for (size_t i = 0; i < outputs.size(); i += op.inputCount) {
+            std::cout << '(';
+            for (size_t j = 0; j < op.inputCount; j++) {
+                if (j > 0) {
+                    std::cout << ' ';
+                }
+                std::cout << outputs[i+j];
             }
-            std::cout << outputs[i+j];
+            std::cout << ") ";
         }
-        std::cout << ") ";
+        std::cout << std::endl;
     }
-    std::cout << std::endl;
 }

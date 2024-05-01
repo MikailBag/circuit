@@ -51,22 +51,11 @@ resource "yandex_container_repository_iam_binding" "pull" {
     members = ["serviceAccount:${yandex_iam_service_account.vm.id}"]
 }
 
-moved {
-  from = yandex_compute_instance_group.main
-  to = module.run.yandex_compute_instance_group.main
-}
-
-moved {
-  from = module.run
-  to = module.run[""]
-}
-
 module "run" {
-    for_each = toset(["", "-honest"])
     source = "./modules/job"
     ig_service_account_id = module.prepare-ig.service_account_id
     vm_service_account_id = yandex_iam_service_account.vm.id
-    spec = templatefile("${path.module}/spec${each.key}.yaml", {"version" = "v7"})
+    spec = templatefile("${path.module}/spec-honest.yaml", {"version" = "v10"})
     subnet_id = yandex_vpc_subnet.main.id
-    name = "my${each.key}"
+    name = "my2"
 }

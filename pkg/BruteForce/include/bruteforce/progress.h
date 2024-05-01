@@ -1,11 +1,10 @@
 #pragma once
 
+#error "this is broken"
+
 #include <cstdlib>
 
 namespace bf {
 
-struct ProgressEvent {
-    size_t finished = 0;
-};
 
 }

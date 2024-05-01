@@ -5,6 +5,7 @@
 #include <concepts>
 #include <cstdlib>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 
@@ -44,6 +45,17 @@ public:
         size_t i = ResolveIndex(is...);
         assert(i < mInner.size());
         mInner[i] = x;
+    }
+
+private:
+    template<size_t... I>
+    void PutArrImpl(bool x, std::array<size_t, NDimensionCount> idx, std::index_sequence<I...>) {
+        Put(x, idx[I]...);
+    }
+
+public:
+    void PutArr(bool x, std::array<size_t, NDimensionCount> idx) {
+        PutArrImpl(x, idx, std::make_index_sequence<NDimensionCount>());
     }
 
     void ApplyPointwiseOr(BitSet const& other) {

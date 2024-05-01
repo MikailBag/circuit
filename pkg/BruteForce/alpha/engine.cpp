@@ -11,7 +11,7 @@ static logger::Logger L = logger::Get("bf.alpha");
 
 namespace bf::alpha {
 template<size_t N>
-void FindAllOutputsBulk(size_t maxBits, size_t explNodeCount, std::function<void(ProgressEvent const&)> func, std::span<Topology const> topologies, bs::BitSet<N>& out) {
+void FindAllOutputsBulk(size_t maxBits, size_t explNodeCount, std::function<void()> func, std::span<Topology const> topologies, bs::BitSet<N>& out) {
     L().AttrU64("topologies", topologies.size()).AttrU64("inputCount", N).AttrU64("bits", maxBits).Log("Starting Alpha engine");
     size_t maxNum = static_cast<size_t>(1) << static_cast<size_t>(maxBits);
     std::vector<bs::BitSet<N>> bufs;
@@ -36,23 +36,19 @@ void FindAllOutputsBulk(size_t maxBits, size_t explNodeCount, std::function<void
     } else {
         std::abort();
     }
-    size_t processed = 0;
     for (Topology const& t : topologies) {
         if (t.nodes.size() > explNodeCount) {
             throw std::invalid_argument("topology is bigger than maxExplicitNodeCount");
         }
         FindTopologyOutputs(t, N, maxBits, out, bufs);
-        ++processed;
-        ProgressEvent ev;
-        ev.finished = processed;
         if (func) {
-            func(ev);
+            func();
         }
     }
 
 }
 
 
-template void FindAllOutputsBulk<1>(size_t, size_t, std::function<void(ProgressEvent const&)>, std::span<Topology const>, bs::BitSet<1>&);
-template void FindAllOutputsBulk<2>(size_t, size_t, std::function<void(ProgressEvent const&)>, std::span<Topology const>, bs::BitSet<2>&);
+template void FindAllOutputsBulk<1>(size_t, size_t, std::function<void()>, std::span<Topology const>, bs::BitSet<1>&);
+template void FindAllOutputsBulk<2>(size_t, size_t, std::function<void()>, std::span<Topology const>, bs::BitSet<2>&);
 }
