@@ -47,7 +47,6 @@ int main(int argc, char** argv) {
     pc.AddOption("bits").DefaultValue("3");
     pc.AddOption("input-count").DefaultValue("2");
     pc.AddOption("config").DefaultValue("()");
-    pc.AddOption("launch-config").DefaultValue("()");
     std::map<std::string, std::string> opts = pc.ParseArgv(argc, argv);
     Config config;
     std::cout << "Using engine config: " << opts["config"] << std::endl;
