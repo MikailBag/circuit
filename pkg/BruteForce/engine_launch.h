@@ -7,14 +7,14 @@
 
 namespace bf {
 struct EngineParams {
-    OutputConfig const& config;
+    EvalConfig const& config;
     size_t inputCount;
     uint8_t maxBits;
     // TODO - remove
     size_t maxExplicitNodeCount;
     std::function<void()> progressListener;
 
-    explicit EngineParams(OutputConfig const& c) : config(c) {} 
+    explicit EngineParams(EvalConfig const& c) : config(c) {} 
 };
 
 

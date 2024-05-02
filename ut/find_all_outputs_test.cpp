@@ -14,14 +14,14 @@
 
 static logger::Logger L = logger::Get("bruteforce-test");
 
-static bf::OutputConfig CONFIG_ALPHA = []{
-    bf::OutputConfig c;
+static bf::EvalConfig CONFIG_ALPHA = []{
+    bf::EvalConfig c;
     c.isAlpha = true;
     return c;
 }();
 
-static bf::OutputConfig CONFIG_BETA = []{
-    bf::OutputConfig c;
+static bf::EvalConfig CONFIG_BETA = []{
+    bf::EvalConfig c;
     c.isBeta = true;
     return c;
 }();
@@ -43,7 +43,7 @@ TEST_CASE("Basic test", "[bruteforce][bruteforce/list]") {
     }
 }
 TEST_CASE("Finds outputs of trivial scheme", "[bruteforce][bruteforce/outputs]") {
-    bf::OutputConfig outConf = GENERATE(CONFIG_ALPHA, CONFIG_BETA);
+    bf::EvalConfig outConf = GENERATE(CONFIG_ALPHA, CONFIG_BETA);
     bf::LaunchConfig lc;
     bf::FindOutputsParams p {outConf, lc};
     p.maxBits = 2;
@@ -61,7 +61,7 @@ TEST_CASE("Finds outputs of trivial scheme", "[bruteforce][bruteforce/outputs]")
 }
 
 TEST_CASE("Finds outputs of a bit more complex scheme", "[bruteforce][bruteforce/outputs]") {
-    bf::OutputConfig outConf = GENERATE(CONFIG_ALPHA, CONFIG_BETA);
+    bf::EvalConfig outConf = GENERATE(CONFIG_ALPHA, CONFIG_BETA);
     bf::LaunchConfig lc;
     bf::FindOutputsParams p {outConf, lc};
     p.maxBits = 2;
@@ -101,7 +101,7 @@ TEST_CASE("Correctly finds certain topology (regression)", "[bruteforce][brutefo
 }
 
 TEST_CASE("Correctly finds output", "[bruteforce][bruteforce/outputs][regression]") {
-    bf::OutputConfig outConf = GENERATE(CONFIG_ALPHA, CONFIG_BETA);
+    bf::EvalConfig outConf = GENERATE(CONFIG_ALPHA, CONFIG_BETA);
     bf::LaunchConfig lc;
     bf::FindOutputsParams p {outConf, lc};
     bf::Topology tp;

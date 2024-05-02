@@ -19,7 +19,26 @@ namespace {
 std::string Now() {
     return std::format("{:%Y-%m-%d %H:%M:%S}", std::chrono::system_clock::now());
 }
+
+
+struct Config: public conf::Target {
+    bf::FilterConfig filter;
+    bf::EvalConfig eval;
+    bf::LaunchConfig launch;
+
+    void Describe(conf::Description& desc) override {
+        desc.IsObject();
+        desc.ObjField("filter", filter);
+        desc.ObjField("eval", eval);
+        desc.ObjField("launch", launch);
+    }
+
+    void Postprocess() override {
+    }
+};
 }
+
+
 
 
 int main(int argc, char** argv) {
@@ -30,7 +49,7 @@ int main(int argc, char** argv) {
     pc.AddOption("config").DefaultValue("()");
     pc.AddOption("launch-config").DefaultValue("()");
     std::map<std::string, std::string> opts = pc.ParseArgv(argc, argv);
-    bf::Config config;
+    Config config;
     std::cout << "Using engine config: " << opts["config"] << std::endl;
     try {
         conf::Parse(opts["config"], config);
@@ -39,23 +58,13 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    std::cout << "Using launch config: " << opts["launch-config"] << std::endl;
-    bf::LaunchConfig launchConfig;
-        try {
-        conf::Parse(opts["launch-config"], launchConfig);
-    } catch (conf::ParseException const& ex) {
-        std::cerr << "Invalid launch config: " << ex.what() << std::endl;
-        return 1;
-    }
-
-
     size_t maxNodeCount = std::stoi(opts["node-count"]);
     for (size_t nodeCount = 1; nodeCount <= maxNodeCount; nodeCount++) {
         bf::FindTopologyParams tp;
         tp.inputCount = std::stoi(opts["input-count"]);
         tp.explicitNodeCountLimit = nodeCount;
 
-        bf::FindOutputsParams op {config.eval, launchConfig};
+        bf::FindOutputsParams op {config.eval, config.launch};
         op.maxBits = std::stoi(opts["bits"]);
         op.maxExplicitNodeCount = nodeCount;
         op.inputCount = tp.inputCount;

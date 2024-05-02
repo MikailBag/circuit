@@ -24,8 +24,8 @@ int main(int argc, char** argv) {
     pc.AddOption("right-config").DefaultValue("[beta:()]");
     pc.AddOption("launch-config").DefaultValue("(parallel=true)");
     std::map<std::string, std::string> opts = pc.ParseArgv(argc, argv);
-    bf::OutputConfig leftConfig;
-    bf::OutputConfig rightConfig;
+    bf::EvalConfig leftConfig;
+    bf::EvalConfig rightConfig;
     bf::FilterConfig filterConfig;
     bf::LaunchConfig launchConfig;
     std::cout << "Using configs: " << std::endl;

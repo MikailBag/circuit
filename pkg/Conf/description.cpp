@@ -8,9 +8,14 @@ namespace conf {
 Desc::Desc(BoolDesc&& bd) : mV(std::move(bd)) {}
 Desc::Desc(ObjDesc&& od) : mV(std::move(od)) {}
 Desc::Desc(EnumDesc&& ed) : mV(std::move(ed)) {}
+Desc::Desc(SizeTDesc&& sd) : mV(std::move(sd)) {}
 
 bool Desc::IsBool() const {
     return std::holds_alternative<BoolDesc>(mV);
+}
+
+bool Desc::IsSizeT() const {
+    return std::holds_alternative<SizeTDesc>(mV);
 }
 
 bool Desc::IsObj() const {
@@ -40,6 +45,13 @@ EnumDesc& Desc::AsEnum() {
         throw std::runtime_error("Enum-describing method used for non-enum target");
     }
     return std::get<EnumDesc>(mV);
+}
+
+SizeTDesc& Desc::AsSizeT() {
+    if (!IsSizeT()) {
+        throw std::runtime_error("Integer-describing method used for non-numeric target");
+    }
+    return std::get<SizeTDesc>(mV);
 }
 
 namespace {
@@ -77,6 +89,12 @@ public:
         BoolDesc d;
         d.field = &f;
         FieldCommon(name, std::move(d));   
+    }
+
+    void NumField(std::string_view name, size_t& f) override {
+        SizeTDesc d;
+        d.field = &f;
+        FieldCommon(name, std::move(d));
     }
 
     void IsEnum() override {

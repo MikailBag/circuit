@@ -61,27 +61,16 @@ struct FilterConfig : public conf::Target {
 
 struct LaunchConfig : public conf::Target {
     bool parallel = false;
-    size_t threadCount = 8; // TODO
-    size_t chunkSize = 10; // TODO
+    size_t threadCount = 8;
+    size_t chunkSize = 10;
 
     void Describe(conf::Description& desc) override {
         desc.IsObject();
         desc.BoolField("parallel", parallel);
+        desc.NumField("thread_count", threadCount);
+        desc.NumField("chunk_size", chunkSize);
     }
 
     void Postprocess() override;
-};
-struct Config: public conf::Target {
-    FilterConfig filter;
-    EvalConfig eval;
-
-    void Describe(conf::Description& desc) override {
-        desc.IsObject();
-        desc.ObjField("filter", filter);
-        desc.ObjField("eval", eval);
-    }
-
-    void Postprocess() override {
-    }
 };
 }

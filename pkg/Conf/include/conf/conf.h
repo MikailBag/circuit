@@ -21,6 +21,7 @@ public:
     virtual void IsObject() = 0;
     virtual void ObjField(std::string_view name, Target& f) = 0;
     virtual void BoolField(std::string_view name, bool& f) = 0;
+    virtual void NumField(std::string_view name, size_t& f) = 0;
     // enum style
     virtual void IsEnum() = 0;
     virtual void Variant(std::string_view name, bool& flag, Target& value) = 0;

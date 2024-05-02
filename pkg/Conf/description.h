@@ -13,7 +13,11 @@ struct BoolDesc {
     bool* field;
 };
 
-using ErasedPostprocessFunc = void(*)(void*);
+struct SizeTDesc {
+    size_t* field;
+};
+
+// using ErasedPostprocessFunc = void(*)(void*);
 
 struct ObjDesc {
     Target* ref;
@@ -33,17 +37,20 @@ struct EnumDesc {
 
 class Desc {
 public:
-    Desc(BoolDesc&& bd);
     Desc(ObjDesc&& od);
     Desc(EnumDesc&& ed);
+    Desc(BoolDesc&& bd);
+    Desc(SizeTDesc&& sd);
     bool IsBool() const;
     bool IsObj() const;
     bool IsEnum() const;
+    bool IsSizeT() const;
     ObjDesc& AsObj();
-    BoolDesc& AsBool();
     EnumDesc& AsEnum();
+    BoolDesc& AsBool();
+    SizeTDesc& AsSizeT();
 private:
-    std::variant<BoolDesc, ObjDesc, EnumDesc> mV;
+    std::variant<BoolDesc, ObjDesc, EnumDesc, SizeTDesc> mV;
 };
 
 Desc Describe(Target& t);
