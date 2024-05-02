@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
         tp.inputCount = std::stoi(opts["input-count"]);
         tp.explicitNodeCountLimit = nodeCount;
 
-        bf::FindOutputsParams op {config.output, launchConfig};
+        bf::FindOutputsParams op {config.eval, launchConfig};
         op.maxBits = std::stoi(opts["bits"]);
         op.maxExplicitNodeCount = nodeCount;
         op.inputCount = tp.inputCount;

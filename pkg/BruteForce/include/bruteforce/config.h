@@ -5,7 +5,7 @@
 #include <memory>
 
 namespace bf {
-struct OutputAlphaConfig: public conf::Target {
+struct EvalAlphaConfig: public conf::Target {
     void Describe(conf::Description& desc) override {
         desc.IsObject();
     }
@@ -13,7 +13,7 @@ struct OutputAlphaConfig: public conf::Target {
     void Postprocess() override {
     }
 };
-struct OutputBetaConfig : public conf::Target {
+struct EvalBetaConfig : public conf::Target {
     bool skipValidation = false;
     bool forceDummy = false;
 
@@ -29,10 +29,10 @@ struct OutputBetaConfig : public conf::Target {
         }
     }
 };
-struct OutputConfig : public conf::Target {
-    OutputAlphaConfig alpha;
+struct EvalConfig : public conf::Target {
+    EvalAlphaConfig alpha;
     bool isAlpha = false;
-    OutputBetaConfig beta;
+    EvalBetaConfig beta;
     bool isBeta = false;
 
     void Describe(conf::Description& desc) override {
@@ -73,12 +73,12 @@ struct LaunchConfig : public conf::Target {
 };
 struct Config: public conf::Target {
     FilterConfig filter;
-    OutputConfig output;
+    EvalConfig eval;
 
     void Describe(conf::Description& desc) override {
         desc.IsObject();
         desc.ObjField("filter", filter);
-        desc.ObjField("output", output);
+        desc.ObjField("eval", eval);
     }
 
     void Postprocess() override {
