@@ -20,11 +20,36 @@ std::string Now() {
     return std::format("{:%Y-%m-%d %H:%M:%S}", std::chrono::system_clock::now());
 }
 
+struct OutputMode: public conf::Target {
+    bool isReachable;
+    void Describe(conf::Description& desc) override {
+        desc.IsEnum();
+        desc.SimpleVariant("reachable", isReachable);
+    }
+    
+    void Postprocess() override {
+        if (!isReachable) {
+            isReachable = true;
+        }
+    }
+};
+
+struct OutputConfig: public conf::Target {
+    OutputMode mode;
+    void Describe(conf::Description& desc) override {
+        desc.IsObject();
+        desc.ObjField("mode", mode);
+    }
+
+    void Postprocess() override {
+    }
+};
 
 struct Config: public conf::Target {
     bf::FilterConfig filter;
     bf::EvalConfig eval;
     bf::LaunchConfig launch;
+    OutputConfig output;
 
     void Describe(conf::Description& desc) override {
         desc.IsObject();
@@ -37,9 +62,6 @@ struct Config: public conf::Target {
     }
 };
 }
-
-
-
 
 int main(int argc, char** argv) {
     argparser::Parser pc;

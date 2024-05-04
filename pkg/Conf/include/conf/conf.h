@@ -25,6 +25,7 @@ public:
     // enum style
     virtual void IsEnum() = 0;
     virtual void Variant(std::string_view name, bool& flag, Target& value) = 0;
+    virtual void SimpleVariant(std::string_view name, bool& flag) = 0;
     virtual ~Description();
 };
 

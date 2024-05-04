@@ -103,17 +103,16 @@ public:
     }
 
     void Variant(std::string_view name, bool& flag, Target& value) override {
-        CheckInit();
-        std::string n {name};
-        EnumDesc& ed = mDesc->AsEnum();
-        if (ed.variants.contains(n)) {
-            throw std::runtime_error("variant " + n + " was already registered");
-        }
         EnumVariant var;
         var.flag = &flag;
         var.content = std::unique_ptr<Desc>{new Desc{Describe(value)}};
+        VariantCommon(name, std::move(var));
+    }
 
-        ed.variants.emplace(std::move(n), std::move(var));
+    void SimpleVariant(std::string_view name, bool& flag) override {
+        EnumVariant var;
+        var.flag = &flag;
+        VariantCommon(name, std::move(var));
     }
 private:
     void CheckInit() {
@@ -126,7 +125,7 @@ private:
             throw std::runtime_error("Is* method may only be called once");
         }
     }
-    void FieldCommon(std::string_view name, Desc fieldDesc) {
+    void FieldCommon(std::string_view name, Desc&& fieldDesc) {
         CheckInit();
         ObjDesc& od = mDesc->AsObj();
         std::string n {name};
@@ -134,6 +133,15 @@ private:
             throw std::runtime_error("field " + n + " was already registered");
         }
         od.fields.emplace(n, std::move(fieldDesc));
+    }
+    void VariantCommon(std::string_view name, EnumVariant&& ev) {
+        CheckInit(); 
+        std::string n {name};
+        EnumDesc& ed = mDesc->AsEnum();
+        if (ed.variants.contains(n)) {
+            throw std::runtime_error("variant " + n + " was already registered");
+        }
+        ed.variants.emplace(std::move(n), std::move(ev));        
     }
 
 

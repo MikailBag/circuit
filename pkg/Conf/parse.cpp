@@ -84,15 +84,15 @@ void ParseObj(ErrorState& es, std::string_view data, ObjDesc& t) {
     std::set<std::string> usedKeys;
     while (!data.empty()) {
         size_t pos = FindKeyValuePairEnd(data);
-        std::string_view first_kv = data.substr(0, pos);
-        size_t eq_pos = first_kv.find('=');
-        if (eq_pos == std::string_view::npos) {
+        std::string_view firstKv = data.substr(0, pos);
+        size_t eqPos = firstKv.find('=');
+        if (eqPos == std::string_view::npos) {
             es.Err("Key-value pair must contain =");
             return;
         }
-        std::string key {first_kv.substr(0, eq_pos)};
+        std::string key {firstKv.substr(0, eqPos)};
         Guard g{es, std::string{key}};
-        std::string_view value = first_kv.substr(eq_pos+1);
+        std::string_view value = firstKv.substr(eqPos+1);
         if (!usedKeys.insert(key).second) {
             es.Err("Duplicated field");
         } else if (!t.fields.contains(key)) {
@@ -117,20 +117,32 @@ void ParseEnum(ErrorState& es, std::string_view data, EnumDesc& t) {
     if (data.empty()) {
         return;
     }
-    size_t sep_pos = data.find(':');
-    if (sep_pos == std::string_view::npos) {
-        es.Err("Key-value pair must contain :");
+    size_t sepPos = data.find(':');
+    std::string variantName;
+    std::string_view value;
+    if (sepPos == std::string_view::npos) {
+        variantName = data;
+        return;
+    } else {
+        variantName = data.substr(0, sepPos);
+        value = data.substr(sepPos+1);
+    }
+    Guard g{es, variantName};
+    if (!t.variants.contains(variantName)) {
+        es.Err("Unknown variant");
         return;
     }
-    std::string key {data.substr(0, sep_pos)};
-    Guard g{es, std::string{key}};
-    std::string_view value = data.substr(sep_pos+1);
-    if (!t.variants.contains(key)) {
-        es.Err("Unknown variant");
-    } else {
-        EnumVariant& v = t.variants.at(key);
-        *v.flag = true;
+    
+    EnumVariant& v = t.variants.at(variantName);
+    *v.flag = true;
+    if (v.content) {
+        if (sepPos == std::string_view::npos) {
+            es.Err("Non-simple variant requires value, but : was not found");
+            return;
+        }
         ParseImpl(es, value, *v.content);
+    } else if (sepPos != std::string_view::npos) {
+        es.Err("Simple variant does not take value, but : was found");
     }
 }
 
