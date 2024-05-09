@@ -157,7 +157,7 @@ void ParseBool(ErrorState& es, std::string_view data, BoolDesc& t) {
 }
 
 void ParseSizeT(ErrorState& es, std::string_view data, SizeTDesc& t) {
-    size_t x;
+    size_t x = 0;
     char const* last = data.data() + data.size();
     std::from_chars_result res = std::from_chars(data.data(), last, x);
     if (res.ptr == last) {

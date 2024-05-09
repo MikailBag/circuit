@@ -7,7 +7,7 @@
 namespace bf {
 struct EvalAlphaConfig: public conf::Target {
     void Describe(conf::Description& desc) override {
-        desc.IsObject();
+        desc.Object();
     }
 
     void Postprocess() override {
@@ -18,9 +18,9 @@ struct EvalBetaConfig : public conf::Target {
     bool forceDummy = false;
 
     void Describe(conf::Description& desc) override {
-        desc.IsObject();
-        desc.BoolField("skip_validation", skipValidation);
-        desc.BoolField("force_dummy", forceDummy);
+        desc.Object()
+            .BoolField("skip_validation", skipValidation)
+            .BoolField("force_dummy", forceDummy);
     }
 
     void Postprocess() override {
@@ -36,9 +36,9 @@ struct EvalConfig : public conf::Target {
     bool isBeta = false;
 
     void Describe(conf::Description& desc) override {
-        desc.IsEnum();
-        desc.Variant("alpha", isAlpha, alpha);
-        desc.Variant("beta", isBeta, beta);
+        desc.Enum()
+            .Variant("alpha", isAlpha, alpha)
+            .Variant("beta", isBeta, beta);
     }
 
     void Postprocess() override {
@@ -51,8 +51,8 @@ struct FilterConfig : public conf::Target {
     bool unsafe = false;
 
     void Describe(conf::Description& desc) override {
-        desc.IsObject();
-        desc.BoolField("unsafe", unsafe);
+        desc.Object()
+            .BoolField("unsafe", unsafe);
     }
 
     void Postprocess() override {
@@ -65,10 +65,10 @@ struct LaunchConfig : public conf::Target {
     size_t chunkSize = 10;
 
     void Describe(conf::Description& desc) override {
-        desc.IsObject();
-        desc.BoolField("parallel", parallel);
-        desc.NumField("thread_count", threadCount);
-        desc.NumField("chunk_size", chunkSize);
+        desc.Object()
+            .BoolField("parallel", parallel)
+            .NumField("thread_count", threadCount)
+            .NumField("chunk_size", chunkSize);
     }
 
     void Postprocess() override;

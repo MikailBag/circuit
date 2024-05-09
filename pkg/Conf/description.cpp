@@ -55,7 +55,7 @@ SizeTDesc& Desc::AsSizeT() {
 }
 
 namespace {
-class DescColl : public Description {
+class DescColl : public Description, public ObjectDescription, public EnumDescription {
 public:
     Desc Unpack() {
         if (!mDesc) {
@@ -76,43 +76,50 @@ public:
         }
     }
 
-    void IsObject() override {
+    ObjectDescription& Object() override {
         CheckUninit();
         mDesc.emplace(ObjDesc{});
+        return *this;
     }
 
-    void ObjField(std::string_view name, Target& f) override {
+    ObjectDescription& ObjField(std::string_view name, Target& f) override {
         FieldCommon(name, Describe(f));
+        return *this;
     }
 
-    void BoolField(std::string_view name, bool& f) override {
+    ObjectDescription& BoolField(std::string_view name, bool& f) override {
         BoolDesc d;
         d.field = &f;
         FieldCommon(name, std::move(d));   
+        return *this;
     }
 
-    void NumField(std::string_view name, size_t& f) override {
+    ObjectDescription& NumField(std::string_view name, size_t& f) override {
         SizeTDesc d;
         d.field = &f;
         FieldCommon(name, std::move(d));
+        return *this;
     }
 
-    void IsEnum() override {
+    EnumDescription& Enum() override {
         CheckUninit();
         mDesc.emplace(EnumDesc{});
+        return *this;
     }
 
-    void Variant(std::string_view name, bool& flag, Target& value) override {
+    EnumDescription& Variant(std::string_view name, bool& flag, Target& value) override {
         EnumVariant var;
         var.flag = &flag;
         var.content = std::unique_ptr<Desc>{new Desc{Describe(value)}};
         VariantCommon(name, std::move(var));
+        return *this;
     }
 
-    void SimpleVariant(std::string_view name, bool& flag) override {
+    EnumDescription& SimpleVariant(std::string_view name, bool& flag) override {
         EnumVariant var;
         var.flag = &flag;
         VariantCommon(name, std::move(var));
+        return *this;
     }
 private:
     void CheckInit() {

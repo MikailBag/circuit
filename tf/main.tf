@@ -55,7 +55,7 @@ module "run" {
     source = "./modules/job"
     ig_service_account_id = module.prepare-ig.service_account_id
     vm_service_account_id = yandex_iam_service_account.vm.id
-    spec = templatefile("${path.module}/spec-honest.yaml", {"version" = "v10"})
+    spec = templatefile("${path.module}/spec-honest.yaml", {"version" = "v13"})
     subnet_id = yandex_vpc_subnet.main.id
     name = "my2"
 }

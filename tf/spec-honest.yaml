@@ -9,10 +9,12 @@ services:
       - '--bits'
       - '6'
       - '--config'
-      - '(output=[beta:()])'
-      - '--launch-config'
-      - '(parallel=true)'
+      - '(eval=[beta:()],launch=(parallel=true))'
+      - '--output-path'
+      - '/out/tiny'
     restart: none
+    volumes:
+      - outputs:/out
   app5s:
     image: "cr.yandex/crp8j4r52de87520rrk6/bf:${version}"
     command:
@@ -22,10 +24,12 @@ services:
       - '--bits'
       - '7'
       - '--config'
-      - '(output=[beta:()])'
-      - '--launch-config'
-      - '(parallel=true)'
+      - '(eval=[beta:()],launch=(parallel=true))'
+      - '--output-path'
+      - '/out/5s'
     restart: none
+    volumes:
+      - outputs:/out
   app5l:
     image: "cr.yandex/crp8j4r52de87520rrk6/bf:${version}"
     command:
@@ -35,10 +39,12 @@ services:
       - '--bits'
       - '9'
       - '--config'
-      - '(output=[beta:()])'
-      - '--launch-config'
-      - '(parallel=true)'
+      - '(eval=[beta:()],launch=(parallel=true))'
+      - '--output-path'
+      - '/out/5l'
     restart: none
+    volumes:
+      - outputs:/out
   app6s:
     image: "cr.yandex/crp8j4r52de87520rrk6/bf:${version}"
     command:
@@ -48,10 +54,12 @@ services:
       - '--bits'
       - '7'
       - '--config'
-      - '(output=[beta:()])'
-      - '--launch-config'
-      - '(parallel=true)'
+      - '(eval=[beta:()],launch=(parallel=true))'
+      - '--output-path'
+      - '/out/6s'
     restart: none
+    volumes:
+      - outputs:/out
   app6l:
     image: "cr.yandex/crp8j4r52de87520rrk6/bf:${version}"
     command:
@@ -61,7 +69,11 @@ services:
       - '--bits'
       - '9'
       - '--config'
-      - '(output=[beta:()])'
-      - '--launch-config'
-      - '(parallel=true)'
+      - '(eval=[beta:()],launch=(parallel=true))'
+      - '--output-path'
+      - '/out/6l'
     restart: none
+    volumes:
+      - outputs:/out
+volumes:
+  outputs: {}

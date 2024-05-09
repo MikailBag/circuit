@@ -10,8 +10,10 @@
 #include <atomic>
 #include <chrono>
 #include <format>
-#include <string>
+#include <fstream>
 #include <iostream>
+#include <iterator>
+#include <string>
 #include <memory>
 
 
@@ -21,15 +23,21 @@ std::string Now() {
 }
 
 struct OutputMode: public conf::Target {
-    bool isReachable;
+    bool isReachable = false;
+    bool isUnreachable = false;
     void Describe(conf::Description& desc) override {
-        desc.IsEnum();
-        desc.SimpleVariant("reachable", isReachable);
+        desc
+            .Enum()
+            .SimpleVariant("reachable", isReachable)
+            .SimpleVariant("unreachable", isUnreachable);
     }
-    
+
     void Postprocess() override {
-        if (!isReachable) {
+        if (!isReachable && !isUnreachable) {
             isReachable = true;
+        }
+        if (isUnreachable) {
+            throw conf::BindingException("todo");
         }
     }
 };
@@ -37,8 +45,9 @@ struct OutputMode: public conf::Target {
 struct OutputConfig: public conf::Target {
     OutputMode mode;
     void Describe(conf::Description& desc) override {
-        desc.IsObject();
-        desc.ObjField("mode", mode);
+        desc
+            .Object()
+            .ObjField("mode", mode);
     }
 
     void Postprocess() override {
@@ -52,15 +61,80 @@ struct Config: public conf::Target {
     OutputConfig output;
 
     void Describe(conf::Description& desc) override {
-        desc.IsObject();
-        desc.ObjField("filter", filter);
-        desc.ObjField("eval", eval);
-        desc.ObjField("launch", launch);
+        desc
+            .Object()
+            .ObjField("filter", filter)
+            .ObjField("eval", eval)
+            .ObjField("launch", launch)
+            .ObjField("output", output);
     }
 
     void Postprocess() override {
     }
 };
+
+class OutputWriter {
+public:
+    virtual void WriteOutputs(std::span<uint64_t const> data, size_t inputCount) = 0;
+    ~OutputWriter() = default;
+};
+
+class ConsoleOutputWriter : public OutputWriter {
+public:
+    void WriteOutputs(std::span<uint64_t const> data, size_t inputCount) override {
+        std::cout << "Possible output count: " << data.size() / inputCount << std::endl;
+        for (size_t i = 0; i < data.size(); i += inputCount) {
+            std::cout << '(';
+            for (size_t j = 0; j < inputCount; j++) {
+                if (j > 0) {
+                    std::cout << ' ';
+                }
+                std::cout << data[i+j];
+            }
+            std::cout << ") ";
+        }
+        std::cout << std::endl;
+    }
+};
+
+class FileOutputWriter : public OutputWriter {
+public:
+    FileOutputWriter(std::ostream& out) : mOut(out) {}
+
+    void WriteOutputs(std::span<uint64_t const> data, size_t inputCount) override {
+        auto it = std::ostreambuf_iterator<char>{mOut};
+        size_t cnt = data.size() / inputCount;
+        std::format_to(it, "(row_count={},input_count={})\n", cnt, inputCount);
+        for (size_t i = 0; i < data.size(); i += inputCount) {
+            *it = '(';
+            for (size_t j = 0; j < inputCount; j++) {
+                if (j > 0) {
+                    *it = ',';
+                }
+                std::format_to(it, "n{}={}", j, data[i+j]);
+            }
+            *it = ')';
+            *it = '\n';
+        }
+    }
+
+private:
+    std::ostream& mOut;
+};
+
+struct FileOutputWriterHolder {
+    std::ofstream file;
+    std::optional<FileOutputWriter> writer;
+};
+
+std::shared_ptr<OutputWriter> MakeFileOutputWriter(std::string_view path) {
+    auto sp = std::make_shared<FileOutputWriterHolder>();
+    sp->file.exceptions(std::ios::eofbit | std::ios::failbit | std::ios::badbit);
+    sp->file.open(std::string{path});
+    sp->writer.emplace(sp->file);
+
+    return std::shared_ptr<OutputWriter>{sp, &sp->writer.value()};
+}
 }
 
 int main(int argc, char** argv) {
@@ -69,6 +143,7 @@ int main(int argc, char** argv) {
     pc.AddOption("bits").DefaultValue("3");
     pc.AddOption("input-count").DefaultValue("2");
     pc.AddOption("config").DefaultValue("()");
+    pc.AddOption("output-path").DefaultValue("cout");
     std::map<std::string, std::string> opts = pc.ParseArgv(argc, argv);
     Config config;
     std::cout << "Using engine config: " << opts["config"] << std::endl;
@@ -77,6 +152,12 @@ int main(int argc, char** argv) {
     } catch (conf::ParseException const& ex) {
         std::cerr << "Invalid config: " << ex.what() << std::endl;
         return 1;
+    }
+    std::shared_ptr<OutputWriter> outputWriter;
+    if (opts["output-path"] == "cout") {
+        outputWriter = std::make_shared<ConsoleOutputWriter>();
+    } else {
+        outputWriter = MakeFileOutputWriter(opts["output-path"]);
     }
 
     size_t maxNodeCount = std::stoi(opts["node-count"]);
@@ -117,20 +198,7 @@ int main(int argc, char** argv) {
         };
 
         std::vector<uint64_t> outputs = bf::FindAllOutputs(op, uniqueTopologies);
-
- 
-        std::cout << "Possible output count: " << outputs.size() / op.inputCount << std::endl;
         assert(outputs.size() % op.inputCount == 0);
-        for (size_t i = 0; i < outputs.size(); i += op.inputCount) {
-            std::cout << '(';
-            for (size_t j = 0; j < op.inputCount; j++) {
-                if (j > 0) {
-                    std::cout << ' ';
-                }
-                std::cout << outputs[i+j];
-            }
-            std::cout << ") ";
-        }
-        std::cout << std::endl;
+        outputWriter->WriteOutputs({outputs.data(), outputs.size()}, op.inputCount);
     }
 }
