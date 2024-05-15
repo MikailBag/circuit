@@ -1,4 +1,4 @@
-#include "isomorphism_key.h"
+#include "isomorphism/key.h"
 
 #include "bruteforce/topology.h"
 
@@ -7,7 +7,7 @@ namespace {
 uint64_t SimpleEval(Topology const& t, size_t inputCount) {
     std::array<uint64_t, kMaxExplicitNodeCount + kMaxInCount> vals;
     for (size_t i = 0; i < inputCount; i++) {
-        vals[i] = i+1;
+        vals[i] = 2*i+1;
     }
     for (size_t i = 0; i < t.nodes.size(); i++) {
         vals[inputCount + i] = vals[t.nodes[i].links[0]] + vals[t.nodes[i].links[1]];

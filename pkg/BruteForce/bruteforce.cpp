@@ -3,8 +3,8 @@
 
 #include "bitset.h"
 #include "engine_launch.h"
-#include "isomorphism_filter.h"
-#include "isomorphism_key.h"
+#include "isomorphism/filter.h"
+#include "isomorphism/key.h"
 
 #include "log/log.h"
 
@@ -68,15 +68,22 @@ std::vector<Topology> FindAllTopologies(FindTopologyParams const& p) {
     return out;
 }
 
-std::vector<Topology> FilterTopologies(FilterParams const& p, std::vector<Topology> const& topologies) {
+std::vector<Topology> FilterTopologies(FilterParams const& p, std::span<Topology const> topologies) {
     L().AttrU64("count", topologies.size()).Log("Filtering topologies");
-    L().AttrS("name", "unsafe").AttrU64("value", static_cast<uint64_t>(p.config.unsafe)).Log("Configuration");
+    if (p.config.sharding.isRange) {
+        size_t sz = topologies.size() / p.config.sharding.range.totalPartCount;
+        size_t start = sz * p.config.sharding.range.rangeStart;
+        size_t end = std::min(topologies.size(), sz * (p.config.sharding.range.rangeStart + p.config.sharding.range.rangeSize));
+        topologies = topologies.subspan(start, end-start);
+        L().AttrU64("remainingCount", topologies.size()).Log("Applied ranged sharding filter");
+    }
+    //L().AttrS("name", "unsafe").AttrU64("value", static_cast<uint64_t>(p.config.unsafe)).Log("Configuration");
     std::vector<std::pair<iso::IsomorphismKey, size_t>> keys;
     //keys.reserve(topologies.size());
     for (size_t i = 0; i < topologies.size(); i++) {
         keys.emplace_back(iso::Get(topologies[i], p.inputCount), i);
     }
-    std::sort(keys.begin(), keys.end());
+    std::stable_sort(keys.begin(), keys.end());
     size_t groupCount = 0;
     for (size_t i = 0; i < topologies.size(); i++) {
         if (i == 0 || keys[i-1].first != keys[i].first) {
@@ -84,22 +91,31 @@ std::vector<Topology> FilterTopologies(FilterParams const& p, std::vector<Topolo
         }
     }
     L().AttrU64("count", groupCount).Log("Computed group keys");
-    std::vector<Topology> res;
+    std::vector<iso::OrderedTopology> rawRes;
     size_t groupStart = 0;
     for (size_t i = 0; i < topologies.size(); i++) {
         if (i + 1 == topologies.size() || keys[i+1].first != keys[i].first) {
             Topology const* first = &topologies[groupStart];
             size_t cnt = i - groupStart + 1;
-            iso::FilterTopologies({first, cnt}, p, res);
+            iso::FilterTopologies({first, cnt}, p, rawRes);
             groupStart = i+1;
         }
     }
+    L().AttrU64("count", rawRes.size()).Log("Sorting");
+    std::stable_sort(rawRes.begin(), rawRes.end(), [](iso::OrderedTopology const& lhs, iso::OrderedTopology const& rhs){
+        return lhs < rhs;
+    });
+    std::vector<Topology> res;
+    for (auto& item : rawRes) {
+        res.push_back(std::move(item.tp));
+    }
+
     return res;
 }
 
 std::vector<uint64_t> FindAllOutputs(FindOutputsParams const& p, std::vector<Topology> const& topologies) {
     ValidateFindOutputParams(p);
-    
+
     std::vector<uint64_t> ans;
     EngineParams ep {p.config};
     ep.inputCount = p.inputCount;

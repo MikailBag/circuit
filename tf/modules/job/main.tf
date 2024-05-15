@@ -42,7 +42,7 @@ resource "yandex_compute_instance_group" "main" {
     }
     scale_policy {
         fixed_scale {
-            size = 1
+            size = var.enabled ? 1 : 0
         }
     }
     deploy_policy {

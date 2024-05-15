@@ -45,11 +45,42 @@ resource "yandex_iam_service_account" "vm" {
     description = "[TF]"
 }
 
+resource "yandex_iam_service_account_static_access_key" "vm" {
+  service_account_id = yandex_iam_service_account.vm.id
+  description        = "static access key for object storage"
+}
+
+resource "yandex_lockbox_secret" "vm-aws" {
+  name = "aws-access"
+  labels = {
+    "managed-by" = "tf"
+  }
+}
+
+resource "yandex_lockbox_secret_version" "vm-aws" {
+  secret_id = yandex_lockbox_secret.vm-aws.id
+  entries {
+    key = "access"
+    text_value = yandex_iam_service_account_static_access_key.vm.access_key
+  }
+  entries {
+    key = "secret"
+    text_value = yandex_iam_service_account_static_access_key.vm.secret_key
+  }
+}
+
 resource "yandex_container_repository_iam_binding" "pull" {
     repository_id = yandex_container_repository.bf.id
     role = "container-registry.images.puller"
     members = ["serviceAccount:${yandex_iam_service_account.vm.id}"]
 }
+
+resource "yandex_resourcemanager_folder_iam_member" "s3-access" {
+  folder_id = var.folder_id
+  role      = "storage.uploader"
+  member    = "serviceAccount:${yandex_iam_service_account.vm.id}"
+}
+
 
 module "run" {
     source = "./modules/job"
@@ -58,4 +89,16 @@ module "run" {
     spec = templatefile("${path.module}/spec-honest.yaml", {"version" = "v13"})
     subnet_id = yandex_vpc_subnet.main.id
     name = "my2"
+    enabled = false
+}
+
+module "s3-setup" {
+    source = "./modules/s3-setup"
+    folder_id = "b1g36mtre1jd6jubc7go"
+}
+
+resource "yandex_storage_bucket" "uploads" {
+  access_key = module.s3-setup.access_key
+  secret_key = module.s3-setup.secret_key
+  bucket = "mikailbag-uploads"
 }

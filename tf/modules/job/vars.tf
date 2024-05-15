@@ -17,3 +17,8 @@ variable "subnet_id" {
 variable "name" {
   type = string
 }
+
+variable "enabled" {
+  type = bool
+  default = true
+}

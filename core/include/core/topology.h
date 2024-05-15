@@ -9,6 +9,8 @@
 struct TopologyNode {
     std::array<uint8_t, 2> links;
 
+    friend std::strong_ordering operator<=>(TopologyNode const& lhs, TopologyNode const& rhs) = default;
+
 };
 
 

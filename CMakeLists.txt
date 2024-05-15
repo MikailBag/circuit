@@ -63,14 +63,14 @@ target_sources(
         pkg/BruteForce/bruteforce.cpp
         pkg/BruteForce/config.cpp
         pkg/BruteForce/engine_launch.cpp
-        pkg/BruteForce/isomorphism_filter.cpp
-        pkg/BruteForce/isomorphism_key.cpp
         pkg/BruteForce/params.cpp
         pkg/BruteForce/stress.cpp
         pkg/BruteForce/topology.cpp
         pkg/BruteForce/alpha/engine.cpp
         pkg/BruteForce/alpha/eval_topology.cpp
         pkg/BruteForce/beta/engine.cpp
+        pkg/BruteForce/isomorphism/filter.cpp
+        pkg/BruteForce/isomorphism/key.cpp
 )
 
 add_executable(M bin/main.cpp)

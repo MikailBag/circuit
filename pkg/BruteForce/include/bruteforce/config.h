@@ -47,12 +47,49 @@ struct EvalConfig : public conf::Target {
         }
     }
 };
-struct FilterConfig : public conf::Target {
-    bool unsafe = false;
+
+
+struct ShardingConfig : public conf::Target {
+    struct RangeSharding : public conf::Target {
+        size_t totalPartCount = 0;
+        size_t rangeStart = 0;
+        size_t rangeSize = 0;
+
+        void Describe(conf::Description& desc) override {
+            desc
+                .Object()
+                .NumField("total_part_count", totalPartCount)
+                .NumField("range_start", rangeStart)
+                .NumField("range_size", rangeSize);
+        }
+
+        void Postprocess() override;
+    };
+
+    bool isNone;
+    RangeSharding range;
+    bool isRange;
 
     void Describe(conf::Description& desc) override {
-        desc.Object()
-            .BoolField("unsafe", unsafe);
+        desc
+            .Enum()
+            .SimpleVariant("none", isNone)
+            .Variant("range", isRange, range);
+    }
+
+    void Postprocess() override {
+    }
+};
+
+struct FilterConfig : public conf::Target {
+    ShardingConfig sharding;
+    bool enableIsomorphismCheck = true;
+
+    void Describe(conf::Description& desc) override {
+        desc
+            .Object()
+            .ObjField("sharding", sharding)
+            .BoolField("check_isomorphism", enableIsomorphismCheck);
     }
 
     void Postprocess() override {

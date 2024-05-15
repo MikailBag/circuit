@@ -33,6 +33,12 @@ int main(int argc, char** argv) {
     std::cout << "Left: " << opts["left-config"] << std::endl;
     std::cout << "Right: " << opts["right-config"] << std::endl;
     std::cout << "Launch: " << opts["launch-config"] << std::endl;
+     try {
+        conf::Parse(opts["filter-config"], filterConfig);
+    } catch (conf::ParseException const& ex) {
+        std::cerr << "Invalid filter config: " << ex.what() << std::endl;
+        return 1;
+    }
     try {
         conf::Parse(opts["left-config"], leftConfig);
     } catch (conf::ParseException const& ex) {
