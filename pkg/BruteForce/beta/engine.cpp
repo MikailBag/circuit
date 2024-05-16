@@ -165,7 +165,7 @@ void FindTopologyOutputsImpl(Topology const& t, uint8_t bits, bs::BitSet<N>& ans
 }
 
 template<size_t N>
-void FindAllOutputsBulk(size_t maxBits, std::function<void()> func, std::span<Topology const> topologies, bs::BitSet<N>& out, EvalBetaConfig const& conf) {
+void FindAllOutputsBulk(EvalConfig::Settings const& settings, std::function<void()> func, std::span<Topology const> topologies, bs::BitSet<N>& out, EvalBetaConfig const& conf) {
     L().AttrU64("cnt", topologies.size()).AttrS("engine", "beta").Log("Starting");
     std::vector<std::array<int64_t, N>> buf;
     buf.resize(kMaxExplicitNodeCount + kMaxInCount);
@@ -175,7 +175,7 @@ void FindAllOutputsBulk(size_t maxBits, std::function<void()> func, std::span<To
             ValidateTopology(t, N);
         }
         if (!conf.forceDummy) {
-            FindTopologyOutputsImpl<N>(t, maxBits, out, bufView, 0);
+            FindTopologyOutputsImpl<N>(t, settings.maxBits, out, bufView, 0);
         }
         if (func) {
             func();
@@ -183,7 +183,7 @@ void FindAllOutputsBulk(size_t maxBits, std::function<void()> func, std::span<To
     }
 }
 
-template void FindAllOutputsBulk<1>(size_t, std::function<void()>, std::span<Topology const>, bs::BitSet<1>&, EvalBetaConfig const& conf);
-template void FindAllOutputsBulk<2>(size_t, std::function<void()>, std::span<Topology const>, bs::BitSet<2>&, EvalBetaConfig const& conf);
+template void FindAllOutputsBulk<1>(EvalConfig::Settings const&, std::function<void()>, std::span<Topology const>, bs::BitSet<1>&, EvalBetaConfig const& conf);
+template void FindAllOutputsBulk<2>(EvalConfig::Settings const&, std::function<void()>, std::span<Topology const>, bs::BitSet<2>&, EvalBetaConfig const& conf);
 
 }

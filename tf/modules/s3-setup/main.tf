@@ -5,14 +5,9 @@ resource "yandex_iam_service_account" "sa" {
 }
 
 // Grant permissions
-resource "yandex_resourcemanager_folder_iam_member" "access1" {
+resource "yandex_resourcemanager_folder_iam_member" "access" {
   folder_id = var.folder_id
-  role      = "storage.editor"
-  member    = "serviceAccount:${yandex_iam_service_account.sa.id}"
-}
-resource "yandex_resourcemanager_folder_iam_member" "access2" {
-  folder_id = var.folder_id
-  role      = "storage.configViewer"
+  role      = "storage.admin"
   member    = "serviceAccount:${yandex_iam_service_account.sa.id}"
 }
 

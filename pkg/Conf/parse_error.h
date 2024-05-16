@@ -1,6 +1,6 @@
 #pragma once
 
-#include "conf/conf.h"
+#include "conf/parse.h"
 
 #include <string>
 #include <vector>

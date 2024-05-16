@@ -1,6 +1,6 @@
 #pragma once
 
-#include "conf/conf.h"
+#include "conf/target.h"
 
 #include <memory>
 
@@ -23,13 +23,10 @@ struct EvalBetaConfig : public conf::Target {
             .BoolField("force_dummy", forceDummy);
     }
 
-    void Postprocess() override {
-        if (skipValidation) {
-            throw conf::BindingException("TODO");
-        }
-    }
+    void Postprocess() override;
 };
-struct EvalConfig : public conf::Target {
+
+struct EvalEngineConfig : public conf::Target {
     EvalAlphaConfig alpha;
     bool isAlpha = false;
     EvalBetaConfig beta;
@@ -45,6 +42,63 @@ struct EvalConfig : public conf::Target {
         if (!isAlpha && !isBeta) {
             isBeta = true;
         }
+    }
+};
+
+struct SecondOutput : public conf::Target {
+    struct Enabled : public conf::Target {
+        uint64_t x = 0;
+        uint64_t y = 0;
+
+        void Describe(conf::Description& desc) override {
+            desc.Object()
+                .NumField("x", x)
+                .NumField("y", y);
+        }
+
+        void Postprocess() override {
+        }
+    };
+
+    bool isDisabled = false;
+    Enabled enabled;
+    bool isEnabled = false;
+
+    void Describe(conf::Description& desc) override {
+        desc.Enum()
+            .SimpleVariant("disabled", isDisabled)
+            .Variant("enabled", isEnabled, enabled);
+    }
+
+    void Postprocess() override {
+    }
+};
+
+struct EvalConfig : public conf::Target {
+    struct Settings : public conf::Target {
+        SecondOutput secondOutput;
+        uint8_t maxBits;
+
+        void Describe(conf::Description& desc) override {
+            desc.Object()
+                .ObjField("second_output", secondOutput)
+                .NumField("max_bits", maxBits);
+        }
+
+        void Postprocess() override {
+        }
+    };
+
+    EvalEngineConfig engine;
+    Settings settings;
+
+    void Describe(conf::Description& desc) override {
+        desc.Object()
+            .ObjField("engine", engine)
+            .ObjField("settings", settings);
+    }
+
+    void Postprocess() override {
     }
 };
 

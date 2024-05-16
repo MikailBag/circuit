@@ -16,13 +16,13 @@ static logger::Logger L = logger::Get("bruteforce-test");
 
 static bf::EvalConfig CONFIG_ALPHA = []{
     bf::EvalConfig c;
-    c.isAlpha = true;
+    c.engine.isAlpha = true;
     return c;
 }();
 
 static bf::EvalConfig CONFIG_BETA = []{
     bf::EvalConfig c;
-    c.isBeta = true;
+    c.engine.isBeta = true;
     return c;
 }();
 
@@ -44,9 +44,9 @@ TEST_CASE("Basic test", "[bruteforce][bruteforce/list]") {
 }
 TEST_CASE("Finds outputs of trivial scheme", "[bruteforce][bruteforce/outputs]") {
     bf::EvalConfig outConf = GENERATE(CONFIG_ALPHA, CONFIG_BETA);
+    outConf.settings.maxBits = 2;
     bf::LaunchConfig lc;
     bf::FindOutputsParams p {outConf, lc};
-    p.maxBits = 2;
     p.inputCount = 1;
     std::vector<bf::Topology> tps;
     tps.push_back(bf::Topology{});
@@ -62,9 +62,9 @@ TEST_CASE("Finds outputs of trivial scheme", "[bruteforce][bruteforce/outputs]")
 
 TEST_CASE("Finds outputs of a bit more complex scheme", "[bruteforce][bruteforce/outputs]") {
     bf::EvalConfig outConf = GENERATE(CONFIG_ALPHA, CONFIG_BETA);
+    outConf.settings.maxBits = 2;
     bf::LaunchConfig lc;
     bf::FindOutputsParams p {outConf, lc};
-    p.maxBits = 2;
     p.maxExplicitNodeCount = 1;
     p.inputCount = 1;
     std::vector<bf::Topology> tps;
@@ -102,12 +102,12 @@ TEST_CASE("Correctly finds certain topology (regression)", "[bruteforce][brutefo
 
 TEST_CASE("Correctly finds output", "[bruteforce][bruteforce/outputs][regression]") {
     bf::EvalConfig outConf = GENERATE(CONFIG_ALPHA, CONFIG_BETA);
+    outConf.settings.maxBits = 3;
     bf::LaunchConfig lc;
     bf::FindOutputsParams p {outConf, lc};
     bf::Topology tp;
     tp.nodes.push_back(TopologyNode{.links={0, 0}});
     p.inputCount = 2;
-    p.maxBits = 3;
     p.maxExplicitNodeCount = 1;
     std::vector<bf::Topology> tps;
     tps.push_back(tp);

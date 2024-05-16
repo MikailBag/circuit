@@ -1,9 +1,13 @@
 #pragma once
 
-#include "conf/conf.h"
+#include "conf/target.h"
 
+#include <charconv>
+#include <functional>
 #include <map>
+#include <memory>
 #include <string>
+#include <string_view>
 #include <variant>
 
 namespace conf {
@@ -13,8 +17,10 @@ struct BoolDesc {
     bool* field;
 };
 
-struct SizeTDesc {
-    size_t* field;
+struct NumDesc {
+    std::function<std::from_chars_result(std::string_view)> parser;
+    explicit NumDesc(size_t& field);
+    explicit NumDesc(uint8_t& field);
 };
 
 // using ErasedPostprocessFunc = void(*)(void*);
@@ -40,17 +46,17 @@ public:
     Desc(ObjDesc&& od);
     Desc(EnumDesc&& ed);
     Desc(BoolDesc&& bd);
-    Desc(SizeTDesc&& sd);
+    Desc(NumDesc&& nd);
     bool IsBool() const;
     bool IsObj() const;
     bool IsEnum() const;
-    bool IsSizeT() const;
+    bool IsNum() const;
     ObjDesc& AsObj();
     EnumDesc& AsEnum();
     BoolDesc& AsBool();
-    SizeTDesc& AsSizeT();
+    NumDesc& AsNum();
 private:
-    std::variant<BoolDesc, ObjDesc, EnumDesc, SizeTDesc> mV;
+    std::variant<BoolDesc, ObjDesc, EnumDesc, NumDesc> mV;
 };
 
 Desc Describe(Target& t);

@@ -32,7 +32,7 @@ target_compile_features(ArrayVec PUBLIC cxx_std_20)
 add_library(Conf STATIC)
 target_include_directories(Conf PUBLIC pkg/Conf/include)
 target_include_directories(Conf PRIVATE pkg/Conf)
-target_sources(Conf PRIVATE pkg/Conf/conf.cpp pkg/Conf/description.cpp pkg/Conf/error.cpp pkg/Conf/parse.cpp)
+target_sources(Conf PRIVATE pkg/Conf/description.cpp pkg/Conf/parse_error.cpp pkg/Conf/parse.cpp pkg/Conf/target.cpp pkg/Conf/validation.cpp)
 target_compile_features(Conf PUBLIC cxx_std_20)
 
 add_library(Core STATIC)

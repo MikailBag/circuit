@@ -22,7 +22,6 @@ struct FilterParams {
 struct FindOutputsParams {
     EvalConfig const& config;
     LaunchConfig const& launchConfig;
-    uint8_t maxBits = 0;
     size_t maxExplicitNodeCount = 0;
     size_t inputCount = 0;
     std::function<void()> progressListener;

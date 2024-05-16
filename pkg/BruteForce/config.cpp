@@ -1,5 +1,7 @@
 #include "bruteforce/config.h"
 
+#include "conf/validation.h"
+
 namespace bf {
 void LaunchConfig::Postprocess() {
     if (parallel) {
@@ -15,6 +17,12 @@ void ShardingConfig::RangeSharding::Postprocess() {
     }
     if (rangeSize > totalPartCount - rangeStart) {
         throw conf::BindingException("range should not exceed total part count");
+    }
+}
+
+void EvalBetaConfig::Postprocess() {
+    if (skipValidation) {
+        throw conf::BindingException("TODO");
     }
 }
 }

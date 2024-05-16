@@ -9,7 +9,6 @@ namespace bf {
 struct EngineParams {
     EvalConfig const& config;
     size_t inputCount;
-    uint8_t maxBits;
     // TODO - remove
     size_t maxExplicitNodeCount;
     std::function<void()> progressListener;

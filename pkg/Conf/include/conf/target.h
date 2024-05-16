@@ -1,17 +1,9 @@
 #pragma once
 
-#include "conf/validation.h"
-
-#include <memory>
-#include <stdexcept>
-#include <string>
+#include <cstdint>
 #include <string_view>
 
 namespace conf {
-namespace detail {
-class ParseExceptionAccess;
-}
-
 
 class Target;
 
@@ -22,6 +14,7 @@ public:
     virtual ObjectDescription& ObjField(std::string_view name, Target& f) = 0;
     virtual ObjectDescription& BoolField(std::string_view name, bool& f) = 0;
     virtual ObjectDescription& NumField(std::string_view name, size_t& f) = 0;
+    virtual ObjectDescription& NumField(std::string_view name, uint8_t& f) = 0;
     
     virtual ~ObjectDescription();
 };
@@ -58,22 +51,4 @@ public:
     virtual ~Target();
 };
 
-class ParseException final : public std::exception {
-    friend class detail::ParseExceptionAccess;
-public:
-    ParseException(ParseException&& that) = default;
-    ParseException& operator=(ParseException&& that) = default;
-
-    char const* what() const noexcept override;
-    ~ParseException();
-
-private:
-    class Impl;
-private:
-    ParseException(std::unique_ptr<Impl> impl);
-private:
-    std::unique_ptr<Impl> mImpl;
-};
-
-void Parse(std::string_view data, Target& t);
 }

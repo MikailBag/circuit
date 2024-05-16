@@ -5,17 +5,34 @@
 #include <variant>
 
 namespace conf {
+namespace {
+template<class T>
+std::function<std::from_chars_result(std::string_view)> MakeParser(T& val) {
+    return [out = &val](std::string_view data) -> std::from_chars_result {
+        T x = 0;
+        char const* last = data.data() + data.size();
+        std::from_chars_result res = std::from_chars(data.data(), last, x);
+        if (res.ptr == last) {
+            *out = x;
+        }
+        return res;
+    };
+}
+}
+NumDesc::NumDesc(size_t& f) : parser(MakeParser(f)) {}
+NumDesc::NumDesc(uint8_t& f) : parser(MakeParser(f)) {}
+
 Desc::Desc(BoolDesc&& bd) : mV(std::move(bd)) {}
 Desc::Desc(ObjDesc&& od) : mV(std::move(od)) {}
 Desc::Desc(EnumDesc&& ed) : mV(std::move(ed)) {}
-Desc::Desc(SizeTDesc&& sd) : mV(std::move(sd)) {}
+Desc::Desc(NumDesc&& nd) : mV(std::move(nd)) {}
 
 bool Desc::IsBool() const {
     return std::holds_alternative<BoolDesc>(mV);
 }
 
-bool Desc::IsSizeT() const {
-    return std::holds_alternative<SizeTDesc>(mV);
+bool Desc::IsNum() const {
+    return std::holds_alternative<NumDesc>(mV);
 }
 
 bool Desc::IsObj() const {
@@ -47,11 +64,11 @@ EnumDesc& Desc::AsEnum() {
     return std::get<EnumDesc>(mV);
 }
 
-SizeTDesc& Desc::AsSizeT() {
-    if (!IsSizeT()) {
+NumDesc& Desc::AsNum() {
+    if (!IsNum()) {
         throw std::runtime_error("Integer-describing method used for non-numeric target");
     }
-    return std::get<SizeTDesc>(mV);
+    return std::get<NumDesc>(mV);
 }
 
 namespace {
@@ -95,9 +112,12 @@ public:
     }
 
     ObjectDescription& NumField(std::string_view name, size_t& f) override {
-        SizeTDesc d;
-        d.field = &f;
-        FieldCommon(name, std::move(d));
+        FieldCommon(name, NumDesc{f});
+        return *this;
+    }
+
+    ObjectDescription& NumField(std::string_view name, uint8_t& f) override {
+        FieldCommon(name, NumDesc{f});
         return *this;
     }
 

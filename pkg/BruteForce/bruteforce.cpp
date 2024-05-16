@@ -120,10 +120,9 @@ std::vector<uint64_t> FindAllOutputs(FindOutputsParams const& p, std::vector<Top
     EngineParams ep {p.config};
     ep.inputCount = p.inputCount;
     ep.maxExplicitNodeCount = p.maxExplicitNodeCount;
-    ep.maxBits = p.maxBits;
     ep.progressListener = p.progressListener;
     if (p.inputCount == 1) {
-        bs::BitSet<1> out = PrepareBitset1(p.maxBits);
+        bs::BitSet<1> out = PrepareBitset1(p.config.settings.maxBits);
         InvokeEngine(ep, p.launchConfig, topologies, &out, nullptr);
         for (size_t i = 0; i < out.size()[0]; ++i) {
             if (out.At(i)) {
@@ -131,7 +130,7 @@ std::vector<uint64_t> FindAllOutputs(FindOutputsParams const& p, std::vector<Top
             }
         }
     } else if (p.inputCount == 2) {
-        bs::BitSet<2> out = PrepareBitset2(p.maxBits);
+        bs::BitSet<2> out = PrepareBitset2(p.config.settings.maxBits);
         InvokeEngine(ep, p.launchConfig, topologies, nullptr, &out);
         for (size_t i = 0; i < out.size()[0]; i++) {
             for (size_t j = 0; j < out.size()[1]; j++) {

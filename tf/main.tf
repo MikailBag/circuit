@@ -75,11 +75,11 @@ resource "yandex_container_repository_iam_binding" "pull" {
     members = ["serviceAccount:${yandex_iam_service_account.vm.id}"]
 }
 
-resource "yandex_resourcemanager_folder_iam_member" "s3-access" {
+/*resource "yandex_resourcemanager_folder_iam_member" "s3-access" {
   folder_id = var.folder_id
   role      = "storage.uploader"
   member    = "serviceAccount:${yandex_iam_service_account.vm.id}"
-}
+}*/
 
 
 module "run" {
@@ -101,4 +101,20 @@ resource "yandex_storage_bucket" "uploads" {
   access_key = module.s3-setup.access_key
   secret_key = module.s3-setup.secret_key
   bucket = "mikailbag-uploads"
+  anonymous_access_flags {
+    read = false
+    list = false
+    config_read = false
+  }
+
+  grant {
+    id = yandex_iam_service_account.vm.id
+    type = "CanonicalUser"
+    permissions = ["READ", "WRITE"]
+  }
+  grant {
+    id = module.s3-setup.service_account_id
+    type = "CanonicalUser"
+    permissions = ["FULL_CONTROL"]
+  }
 }

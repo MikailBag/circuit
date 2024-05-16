@@ -12,15 +12,13 @@ std::optional<Mismatch> Compare(FindOutputsParams const& left, FindOutputsParams
     epRight.inputCount = right.inputCount;
     epLeft.maxExplicitNodeCount = left.maxExplicitNodeCount;
     epRight.maxExplicitNodeCount = right.maxExplicitNodeCount;
-    assert(left.maxBits == right.maxBits);
-    epLeft.maxBits = left.maxBits;
-    epRight.maxBits = right.maxBits;
+    assert(left.config.settings.maxBits == right.config.settings.maxBits);
     epLeft.progressListener = left.progressListener;
     epRight.progressListener = right.progressListener;
     std::vector<Topology> tmp;
     if (left.inputCount == 1) {
-        bs::BitSet<1> resultLeft = PrepareBitset1(left.maxBits);
-        bs::BitSet<1> resultRight = PrepareBitset1(left.maxBits);
+        bs::BitSet<1> resultLeft = PrepareBitset1(left.config.settings.maxBits);
+        bs::BitSet<1> resultRight = PrepareBitset1(left.config.settings.maxBits);
         for (size_t i = 0; i < topologies.size(); i++) {
             tmp.clear();
             tmp.push_back(topologies[i]);

@@ -1,7 +1,9 @@
-#include "conf/conf.h"
+#include "conf/parse.h"
+
+#include "conf/validation.h"
 
 #include "description.h"
-#include "error.h"
+#include "parse_error.h"
 
 #include <cassert>
 #include <charconv>
@@ -156,21 +158,15 @@ void ParseBool(ErrorState& es, std::string_view data, BoolDesc& t) {
     }
 }
 
-void ParseSizeT(ErrorState& es, std::string_view data, SizeTDesc& t) {
-    size_t x = 0;
-    char const* last = data.data() + data.size();
-    std::from_chars_result res = std::from_chars(data.data(), last, x);
-    if (res.ptr == last) {
-        *t.field = x;
-        return;
-    }
+void ParseNum(ErrorState& es, std::string_view data, NumDesc& t) {
+    std::from_chars_result res = t.parser(data);
     if (res.ec == std::errc::result_out_of_range) {
         es.Err("Value is out of range for size_t: " + std::string{data});
     } else if (res.ec == std::errc::invalid_argument) {
         es.Err("Value is not integer: " + std::string{data});
     } else if (res.ec == std::errc{}) {
-        size_t unparsedCnt = last - res.ptr;
-        std::string_view unparsed {res.ptr, unparsedCnt};
+        size_t parsedCnt = res.ptr - data.data();
+        std::string_view unparsed = data.substr(parsedCnt);
         es.Err("Value has invalid trailing data: '" + std::string{unparsed} + "'");
     } else {
         es.Err("Parsing error for input'" + std::string{data} + "': " + std::make_error_code(res.ec).message());
@@ -184,8 +180,8 @@ void ParseImpl(ErrorState& es, std::string_view data, Desc& d) {
         ParseObj(es, data, d.AsObj());
     } else if (d.IsEnum()) {
         ParseEnum(es, data, d.AsEnum());
-    } else if (d.IsSizeT()) {
-        ParseSizeT(es, data, d.AsSizeT());
+    } else if (d.IsNum()) {
+        ParseNum(es, data, d.AsNum());
     } else {
         assert(false);
     }
@@ -225,7 +221,7 @@ void PostprocessImpl(ErrorState& es, Desc& d) {
         PostprocessObj(es, d.AsObj());
     } else if (d.IsEnum()) {
         PostprocessEnum(es, d.AsEnum());
-    } else if (d.IsBool() || d.IsSizeT()) {
+    } else if (d.IsBool() || d.IsNum()) {
     } else {
         std::abort();
     }

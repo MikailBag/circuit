@@ -10,5 +10,5 @@
 
 namespace bf::beta {
 template<size_t N>
-void FindAllOutputsBulk(size_t maxBits, std::function<void()> func, std::span<Topology const> topologies, bs::BitSet<N>& out, EvalBetaConfig const& conf);
+void FindAllOutputsBulk(EvalConfig::Settings const& settings, std::function<void()> func, std::span<Topology const> topologies, bs::BitSet<N>& out, EvalBetaConfig const& conf);
 }

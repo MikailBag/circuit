@@ -4,7 +4,7 @@
 #include "bruteforce/config.h"
 #include "bruteforce/stress.h"
 
-#include "conf/conf.h"
+#include "conf/parse.h"
 
 #include "core/topology.h"
 
@@ -17,7 +17,6 @@
 int main(int argc, char** argv) {
     argparser::Parser pc;
     pc.AddOption("node-count").DefaultValue("5");
-    pc.AddOption("bits").DefaultValue("4");
     pc.AddOption("input-count").DefaultValue("1");
     pc.AddOption("filter-config").DefaultValue("()");
     pc.AddOption("left-config").DefaultValue("[alpha:()]");
@@ -65,13 +64,12 @@ int main(int argc, char** argv) {
 
     bf::FindOutputsParams opLeft {leftConfig, launchConfig};
     bf::FindOutputsParams opRight {rightConfig, launchConfig};
-    opLeft.maxBits = opRight.maxBits = std::stoi(opts["bits"]);
     opLeft.maxExplicitNodeCount = opRight.maxExplicitNodeCount = tp.explicitNodeCountLimit;
     opLeft.inputCount = opRight.inputCount = tp.inputCount;
     
     std::cout << "Input count: " << opLeft.inputCount
               << ", node count: " << tp.explicitNodeCountLimit
-              << ", bits " << static_cast<int>(opLeft.maxBits)
+              << ", bits " << static_cast<int>(opLeft.config.settings.maxBits)
               << std::endl;
     
 

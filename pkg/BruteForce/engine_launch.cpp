@@ -1,6 +1,5 @@
 #include "engine_launch.h"
 
-
 #include "bitset.h"
 
 #include "alpha/engine.h"
@@ -18,8 +17,6 @@
 static logger::Logger L = logger::Get("bf.launch");
 
 namespace bf {
-
-
 
 namespace {
 class Engine {
@@ -42,9 +39,9 @@ private:
 };
 
 
-class WorkScheduler {
+class WorkQueue {
 public:
-    WorkScheduler(size_t chunkSize, std::span<Topology const> input) : chunkSize(chunkSize), mRemaining(input) {
+    WorkQueue(size_t chunkSize, std::span<Topology const> input) : mChunkSize(chunkSize), mRemaining(input) {
     }
 
     std::optional<std::span<Topology const>> NextTask() {
@@ -52,13 +49,13 @@ public:
         if (mRemaining.empty()) {
             return {};
         }
-        size_t cntToReturn = std::min(mRemaining.size(), chunkSize);
+        size_t cntToReturn = std::min(mRemaining.size(), mChunkSize);
         std::span<Topology const> ret = mRemaining.subspan(0, cntToReturn);
         mRemaining = mRemaining.subspan(cntToReturn);
         return ret;
     }
 private:
-    size_t chunkSize;
+    size_t mChunkSize;
     std::mutex mMu;
     std::span<Topology const> mRemaining;
 };
@@ -70,16 +67,16 @@ void InvokeEngineImpl(Engine const& engine, std::vector<Topology> const& topolog
         return;
     }
     L().AttrU64("threads", lp.threadCount).AttrU64("chunkSize", lp.chunkSize).AttrU64("tasks", topologies.size()).Log("Starting parallel engine");
-    WorkScheduler sched(lp.chunkSize, topologies);
-    std::vector<std::jthread> workers;
+    WorkQueue queue{lp.chunkSize, topologies};
     std::mutex joinMu;
+    std::vector<std::jthread> workers;
     for (size_t i = 0; i < lp.threadCount; i++) {
         workers.emplace_back(
             [
                 joinMu=&joinMu,
                 index=i,
                 inputCount=inputCount,
-                sched = &sched,
+                queue = &queue,
                 engine=&engine,
                 maxBits,
                 out1,
@@ -91,7 +88,7 @@ void InvokeEngineImpl(Engine const& engine, std::vector<Topology> const& topolog
                 bs::BitSet<2> interm2 = PrepareBitset2(maxBits);
                 L().AttrU64("index", index).Log("Starting worker");
                 while (!stop.stop_requested()) {
-                    std::optional<std::span<Topology const>> items = sched->NextTask();
+                    std::optional<std::span<Topology const>> items = queue->NextTask();
                     if (!items) {
                         break;
                     }
@@ -118,27 +115,32 @@ void InvokeEngineImpl(Engine const& engine, std::vector<Topology> const& topolog
 }
 
 void InvokeEngine(EngineParams const& ep, LaunchConfig const& lp, std::vector<Topology> const& topologies, bs::BitSet<1>* out1, bs::BitSet<2>* out2) {
+    if (ep.config.settings.secondOutput.isEnabled) {
+        if (ep.config.engine.isAlpha) {
+            throw std::invalid_argument("second output not available for broken alpha engine");
+        }
+    }
     if (ep.inputCount == 1) {
         assert(out1 != nullptr);
-        if (ep.config.isAlpha) {
+        if (ep.config.engine.isAlpha) {
             InvokeEngineImpl(FnEngine{[ep = &ep](std::span<Topology const> topologies, bs::BitSet<1>* out1, [[maybe_unused]] bs::BitSet<2>* out2){
-                alpha::FindAllOutputsBulk<1>(ep->maxBits, ep->maxExplicitNodeCount, ep->progressListener, topologies, *out1);
-            }}, topologies, lp, out1, out2, ep.maxBits, ep.inputCount);
-        } else if (ep.config.isBeta) {
+                alpha::FindAllOutputsBulk<1>(ep->config.settings.maxBits, ep->maxExplicitNodeCount, ep->progressListener, topologies, *out1);
+            }}, topologies, lp, out1, out2, ep.config.settings.maxBits, ep.inputCount);
+        } else if (ep.config.engine.isBeta) {
             InvokeEngineImpl(FnEngine{[ep = &ep](std::span<Topology const> topologies, bs::BitSet<1>* out1, [[maybe_unused]] bs::BitSet<2>* out2){
-                beta::FindAllOutputsBulk<1>(ep->maxBits, ep->progressListener, topologies, *out1, ep->config.beta);
-            }}, topologies, lp, out1, out2, ep.maxBits, ep.inputCount);
+                beta::FindAllOutputsBulk<1>(ep->config.settings, ep->progressListener, topologies, *out1, ep->config.engine.beta);
+            }}, topologies, lp, out1, out2, ep.config.settings.maxBits, ep.inputCount);
         }
     } else if (ep.inputCount == 2) {
         assert(out2 != nullptr);
-        if (ep.config.isAlpha) {
+        if (ep.config.engine.isAlpha) {
             InvokeEngineImpl(FnEngine{[ep = &ep](std::span<Topology const> topologies, [[maybe_unused]] bs::BitSet<1>* out1, bs::BitSet<2>* out2){
-                alpha::FindAllOutputsBulk<2>(ep->maxBits, ep->maxExplicitNodeCount, ep->progressListener, topologies, *out2);
-            }}, topologies, lp, out1, out2, ep.maxBits, ep.inputCount);
-        } else if (ep.config.isBeta) {
+                alpha::FindAllOutputsBulk<2>(ep->config.settings.maxBits, ep->maxExplicitNodeCount, ep->progressListener, topologies, *out2);
+            }}, topologies, lp, out1, out2, ep.config.settings.maxBits, ep.inputCount);
+        } else if (ep.config.engine.isBeta) {
             InvokeEngineImpl(FnEngine{[ep = &ep](std::span<Topology const> topologies, [[maybe_unused]] bs::BitSet<1>* out1, bs::BitSet<2>* out2) {
-                beta::FindAllOutputsBulk<2>(ep->maxBits, ep->progressListener, topologies, *out2, ep->config.beta);
-            }}, topologies, lp, out1, out2, ep.maxBits, ep.inputCount);
+                beta::FindAllOutputsBulk<2>(ep->config.settings, ep->progressListener, topologies, *out2, ep->config.engine.beta);
+            }}, topologies, lp, out1, out2, ep.config.settings.maxBits, ep.inputCount);
         }
     } else {
         std::abort();

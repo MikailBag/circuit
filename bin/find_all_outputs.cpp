@@ -3,7 +3,8 @@
 #include "bruteforce/bruteforce.h"
 #include "bruteforce/config.h"
 
-#include "conf/conf.h"
+#include "conf/parse.h"
+#include "conf/validation.h"
 
 #include "graph.h"
 
@@ -167,12 +168,10 @@ int main(int argc, char** argv) {
         tp.explicitNodeCountLimit = nodeCount;
 
         bf::FindOutputsParams op {config.eval, config.launch};
-        op.maxBits = std::stoi(opts["bits"]);
         op.maxExplicitNodeCount = nodeCount;
         op.inputCount = tp.inputCount;
         std::cout << "Input count: " << op.inputCount
                   << ", node count: " << nodeCount
-                  << ", bits " << static_cast<int>(op.maxBits)
                   << std::endl;
 
         std::vector<bf::Topology> topologies = bf::FindAllTopologies(tp);
