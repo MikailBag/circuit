@@ -160,6 +160,9 @@ void ParseBool(ErrorState& es, std::string_view data, BoolDesc& t) {
 
 void ParseNum(ErrorState& es, std::string_view data, NumDesc& t) {
     std::from_chars_result res = t.parser(data);
+    if (res.ptr == data.data() + data.size()) {
+        return;
+    }
     if (res.ec == std::errc::result_out_of_range) {
         es.Err("Value is out of range for size_t: " + std::string{data});
     } else if (res.ec == std::errc::invalid_argument) {

@@ -1,0 +1,43 @@
+version: '3.7'
+services:
+  tiny:
+    image: "cr.yandex/crp8j4r52de87520rrk6/bf:${version}"
+    command:
+      - 'find-all-outputs-debug'
+      - '--node-count'
+      - '4'
+      - '--config'
+      - '(eval=(engine=[beta:()],settings=(max_bits=6)),launch=(parallel=true))'
+      - '--output-path'
+      - '/out/tiny'
+    restart: none
+    volumes:
+      - outputs:/out
+  app6s:
+    image: "cr.yandex/crp8j4r52de87520rrk6/bf:${version}"
+    command:
+      - 'find-all-outputs-release'
+      - '--node-count'
+      - '6'
+      - '--config'
+      - '(eval=(engine=[beta:()],settings=(max_bits=8)),launch=(parallel=true))'
+      - '--output-path'
+      - '/out/6s'
+    restart: none
+    volumes:
+      - outputs:/out
+  app6l:
+    image: "cr.yandex/crp8j4r52de87520rrk6/bf:${version}"
+    command:
+      - 'find-all-outputs-release'
+      - '--node-count'
+      - '6'
+      - '--config'
+      - '(eval=(engine=[beta:()],settings=(max_bits=9)),launch=(parallel=true))'
+      - '--output-path'
+      - '/out/6l'
+    restart: none
+    volumes:
+      - outputs:/out
+volumes:
+  outputs: {}

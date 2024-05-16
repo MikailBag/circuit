@@ -105,17 +105,42 @@ std::array<uint64_t, N> TryNormalizeForSink(std::array<int64_t, N> val, bool& ok
 }
 
 template<size_t N>
-void FindTopologyOutputsImpl(Topology const& t, uint8_t bits, bs::BitSet<N>& ans, std::span<std::array<int64_t, N>> buf, size_t pos) {
+struct State {
+    uint8_t bits;
+    bool enableSecondOutputFilter = false;
+    std::array<uint64_t, N> expectedSecondOutput;
+
+};
+
+template<size_t N>
+void FindTopologyOutputsImpl(State<N> const& s, Topology const& t, bs::BitSet<N>& ans, std::span<std::array<int64_t, N>> buf, size_t pos) {
     static_assert(N == 1 || N == 2, "Unsupported N");
-    size_t maxVal = 1 << static_cast<size_t>(bits);
+    size_t maxVal = 1 << static_cast<size_t>(s.bits);
     bool isSink = pos == N + t.nodes.size() - 1;
-    auto push = [pos, isSink, maxVal, buf, t = std::cref(t), bits, ans = std::ref(ans)](std::array<int64_t, N> res){
+    bool isPotentialSecondOutput = (t.nodes.size() >= 2) && (pos == N + t.nodes.size() - 2);
+    auto push = [pos, isSink, isPotentialSecondOutput, maxVal, buf, t = std::cref(t), s = &s, ans = std::ref(ans)](std::array<int64_t, N> res){
         if (AbsMax(res) > maxVal) {
             return;
+        }
+        if (isPotentialSecondOutput && s->enableSecondOutputFilter) {
+            
         }
         if (isSink) {
             bool ok;
             std::array<uint64_t, N> idx = TryNormalizeForSink(res, ok);
+            if (s->enableSecondOutputFilter) {
+                bool ok2;
+                std::array<uint64_t, N> idx2 = TryNormalizeForSink(buf[pos-1], ok2);
+                if (!ok2) {
+                    return;
+                }
+                if (idx2 != s->expectedSecondOutput) {
+                    if (idx != s->expectedSecondOutput) {
+                        return;
+                    }
+                    idx = idx2;
+                }
+            }
             while (ok) {
                 ans.get().PutArr(true, idx);
                 res = MulBy2(res);
@@ -129,7 +154,7 @@ void FindTopologyOutputsImpl(Topology const& t, uint8_t bits, bs::BitSet<N>& ans
             }
         } else {
             buf[pos] = res;
-            FindTopologyOutputsImpl<N>(t, bits, ans, buf, pos+1);
+            FindTopologyOutputsImpl<N>(*s, t, ans, buf, pos+1);
         }
     };
 
@@ -175,7 +200,20 @@ void FindAllOutputsBulk(EvalConfig::Settings const& settings, std::function<void
             ValidateTopology(t, N);
         }
         if (!conf.forceDummy) {
-            FindTopologyOutputsImpl<N>(t, settings.maxBits, out, bufView, 0);
+            State<N> s;
+            if (settings.secondOutput.isEnabled) {
+                s.enableSecondOutputFilter = true;
+                if constexpr (N == 1) {
+                    s.expectedSecondOutput = {settings.secondOutput.enabled.x};
+                } else if (N == 2) {
+                    s.expectedSecondOutput = {settings.secondOutput.enabled.x, settings.secondOutput.enabled.y};
+                } else {
+                    assert(false);
+                }
+            }
+            s.bits = settings.maxBits;
+            
+            FindTopologyOutputsImpl<N>(s, t, out, bufView, 0);
         }
         if (func) {
             func();

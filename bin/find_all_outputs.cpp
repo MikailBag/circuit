@@ -141,7 +141,6 @@ std::shared_ptr<OutputWriter> MakeFileOutputWriter(std::string_view path) {
 int main(int argc, char** argv) {
     argparser::Parser pc;
     pc.AddOption("node-count").DefaultValue("3");
-    pc.AddOption("bits").DefaultValue("3");
     pc.AddOption("input-count").DefaultValue("2");
     pc.AddOption("config").DefaultValue("()");
     pc.AddOption("output-path").DefaultValue("cout");

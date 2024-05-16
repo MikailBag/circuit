@@ -72,7 +72,7 @@ TEST_CASE("Finds outputs of a bit more complex scheme", "[bruteforce][bruteforce
     TopologyNode tn;
     tn.links[0] = 0;
     tn.links[1] = 0;
-    tp.nodes.push_back(TopologyNode{});
+    tp.nodes.push_back(tn);
     tps.push_back(tp);
     std::vector<uint64_t> outputs = bf::FindAllOutputs(p, tps);
     for (uint64_t x : outputs) {
@@ -86,18 +86,74 @@ TEST_CASE("Finds outputs of a bit more complex scheme", "[bruteforce][bruteforce
     CHECK(std::find(outputs.begin(), outputs.end(), 4) != outputs.end());
 }
 
+TEST_CASE("Finds two-output topology", "[bruteforce][bruteforce/outputs][bruteforce/outputs/second]") {
+    bf::EvalConfig evalConf = CONFIG_BETA;
+    evalConf.settings.maxBits = 4;
+    evalConf.settings.secondOutput.isEnabled = true;
+    evalConf.settings.secondOutput.enabled.x = 5;
+    bf::LaunchConfig lc;
+    bf::FindOutputsParams p {evalConf, lc};
+    p.maxExplicitNodeCount = 2;
+    p.inputCount = 1;
+    /*
+    x = (1 + 1 << 2) = 5
+    y = (x<<1 + 1) = 11
+    */
+    std::vector<bf::Topology> tps;
+    bf::Topology tp;
+    TopologyNode tn;
+    tn.links[0] = 0;
+    tn.links[1] = 0;
+    tp.nodes.push_back(tn);
+    tn.links[0] = 0;
+    tn.links[1] = 1;
+    tp.nodes.push_back(tn);
+    tps.push_back(tp);
+    std::vector<uint64_t> outputs = bf::FindAllOutputs(p, tps);
+    for (uint64_t x : outputs) {
+        L().AttrU64("num", x).Log("Output");
+    }
+    CHECK(std::find(outputs.begin(), outputs.end(), 8) != outputs.end());
+}
+
+TEST_CASE("Respects two-output filter", "[bruteforce][bruteforce/outputs][bruteforce/outputs/second]") {
+    bf::EvalConfig evalConf = CONFIG_BETA;
+    evalConf.settings.maxBits = 5;
+    evalConf.settings.secondOutput.isEnabled = true;
+    evalConf.settings.secondOutput.enabled.x = 21;
+    bf::LaunchConfig lc;
+    bf::FindOutputsParams p {evalConf, lc};
+    p.maxExplicitNodeCount = 2;
+    p.inputCount = 1;
+    std::vector<bf::Topology> tps;
+    bf::Topology tp;
+    TopologyNode tn;
+    tn.links[0] = 0;
+    tn.links[1] = 0;
+    tp.nodes.push_back(tn);
+    tn.links[0] = 0;
+    tn.links[1] = 1;
+    tp.nodes.push_back(tn);
+    tps.push_back(tp);
+    std::vector<uint64_t> outputs = bf::FindAllOutputs(p, tps);
+    for (uint64_t x : outputs) {
+        L().AttrU64("num", x).Log("Output");
+    }
+    CHECK(std::find(outputs.begin(), outputs.end(), 7) == outputs.end());
+}
+
 TEST_CASE("Correctly finds certain topology (regression)", "[bruteforce][bruteforce/outputs][regression]") {
-        bf::FindTopologyParams p;
-        p.explicitNodeCountLimit = 1;
-        p.inputCount = 2;
-        std::vector<bf::Topology> out = bf::FindAllTopologies(p);
-        bool ok = false;
-        for (bf::Topology const& t : out) {
-            if (t.nodes[0].links[0] == 0 && t.nodes[0].links[1] == 0) {
-                ok = true;
-            }
+    bf::FindTopologyParams p;
+    p.explicitNodeCountLimit = 1;
+    p.inputCount = 2;
+    std::vector<bf::Topology> out = bf::FindAllTopologies(p);
+    bool ok = false;
+    for (bf::Topology const& t : out) {
+        if (t.nodes[0].links[0] == 0 && t.nodes[0].links[1] == 0) {
+            ok = true;
         }
-        CHECK(ok);
+    }
+    CHECK(ok);
 }
 
 TEST_CASE("Correctly finds output", "[bruteforce][bruteforce/outputs][regression]") {
