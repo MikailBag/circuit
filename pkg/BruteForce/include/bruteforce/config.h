@@ -66,9 +66,9 @@ struct ShardingConfig : public conf::Target {
         void Postprocess() override;
     };
 
-    bool isNone;
+    bool isNone = false;
     RangeSharding range;
-    bool isRange;
+    bool isRange = false;
 
     void Describe(conf::Description& desc) override {
         desc
@@ -78,12 +78,15 @@ struct ShardingConfig : public conf::Target {
     }
 
     void Postprocess() override {
+        if (!isNone && !isRange) {
+            isNone = true;
+        }
     }
 };
 
 struct FilterConfig : public conf::Target {
     ShardingConfig sharding;
-    bool enableIsomorphismCheck = true;
+    bool enableIsomorphismCheck = false;
 
     void Describe(conf::Description& desc) override {
         desc
