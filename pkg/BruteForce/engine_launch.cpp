@@ -149,16 +149,19 @@ void InvokeEngine(EngineParams const& ep, LaunchConfig const& lp, std::vector<To
 
 namespace {
 size_t GetSize(uint8_t maxBits) {
-    return static_cast<size_t>(1) << static_cast<size_t>(maxBits);
+    size_t s = static_cast<size_t>(1) << static_cast<size_t>(maxBits);
+    s *= 2; // negative numbers
+    s += 1; // zero
+    return s;
 }
 }
 
 bs::BitSet<1> PrepareBitset1(uint8_t maxBits) {
     size_t sz = GetSize(maxBits);
-    return bs::BitSet{std::array{sz+1}};
+    return bs::BitSet{std::array{sz}};
 }
 bs::BitSet<2> PrepareBitset2(uint8_t maxBits) {
     size_t sz = GetSize(maxBits);
-    return bs::BitSet{std::array{sz+1, sz+1}};
+    return bs::BitSet{std::array{sz, sz}};
 }
 }

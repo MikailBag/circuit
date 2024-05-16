@@ -76,13 +76,13 @@ struct Config: public conf::Target {
 
 class OutputWriter {
 public:
-    virtual void WriteOutputs(std::span<uint64_t const> data, size_t inputCount) = 0;
+    virtual void WriteOutputs(std::span<int64_t const> data, size_t inputCount) = 0;
     ~OutputWriter() = default;
 };
 
 class ConsoleOutputWriter : public OutputWriter {
 public:
-    void WriteOutputs(std::span<uint64_t const> data, size_t inputCount) override {
+    void WriteOutputs(std::span<int64_t const> data, size_t inputCount) override {
         std::cout << "Possible output count: " << data.size() / inputCount << std::endl;
         for (size_t i = 0; i < data.size(); i += inputCount) {
             std::cout << '(';
@@ -102,7 +102,7 @@ class FileOutputWriter : public OutputWriter {
 public:
     FileOutputWriter(std::ostream& out) : mOut(out) {}
 
-    void WriteOutputs(std::span<uint64_t const> data, size_t inputCount) override {
+    void WriteOutputs(std::span<int64_t const> data, size_t inputCount) override {
         auto it = std::ostreambuf_iterator<char>{mOut};
         size_t cnt = data.size() / inputCount;
         std::format_to(it, "(row_count={},input_count={})\n", cnt, inputCount);
@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
             }
         };
 
-        std::vector<uint64_t> outputs = bf::FindAllOutputs(op, uniqueTopologies);
+        std::vector<int64_t> outputs = bf::FindAllOutputs(op, uniqueTopologies);
         assert(outputs.size() % op.inputCount == 0);
         outputWriter->WriteOutputs({outputs.data(), outputs.size()}, op.inputCount);
     }

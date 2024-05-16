@@ -19,8 +19,10 @@ std::function<std::from_chars_result(std::string_view)> MakeParser(T& val) {
     };
 }
 }
-NumDesc::NumDesc(size_t& f) : parser(MakeParser(f)) {}
-NumDesc::NumDesc(uint8_t& f) : parser(MakeParser(f)) {}
+
+#define X(ty) NumDesc::NumDesc(ty& f) : parser(MakeParser(f)) {}
+#include "conf/supported_int_types.inc.x"
+#undef X
 
 Desc::Desc(BoolDesc&& bd) : mV(std::move(bd)) {}
 Desc::Desc(ObjDesc&& od) : mV(std::move(od)) {}
@@ -117,6 +119,11 @@ public:
     }
 
     ObjectDescription& NumField(std::string_view name, uint8_t& f) override {
+        FieldCommon(name, NumDesc{f});
+        return *this;
+    }
+
+    ObjectDescription& NumField(std::string_view name, int64_t& f) override {
         FieldCommon(name, NumDesc{f});
         return *this;
     }

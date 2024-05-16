@@ -104,7 +104,12 @@ public:
 private:
     void CheckSameSizeAs(BitSet const& other) {
         if (mSz != other.mSz) {
-            throw std::runtime_error("incompatible sizes");
+            std::abort();
+            try {
+                throw std::runtime_error("incompatible sizes");
+            } catch (std::runtime_error const&) {
+                std::terminate();
+            }
         }
     }
     static size_t Mul(SizeT sizes) {
@@ -134,10 +139,14 @@ class BitSetOps {
 public:
     BitSetOps() = delete;
     template<size_t N>
-    static BitSet<N> SumConv(BitSet<N> const& lhs, BitSet<N> const& rhs) {
+    static BitSet<N> SumConv(BitSet<N> const& lhs, BitSet<N> const& rhs) noexcept {
         Size<N> sz = lhs.size();
         if (sz != rhs.mSz) {
-            throw std::runtime_error("incompatible sizes");
+            try {
+                throw std::runtime_error("incompatible sizes");
+            } catch (std::runtime_error const&) {
+                std::terminate();
+            }
         }
         BitSet out {sz};
         out.Fill(false);

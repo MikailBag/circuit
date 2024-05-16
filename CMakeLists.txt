@@ -64,6 +64,7 @@ target_sources(
         pkg/BruteForce/config.cpp
         pkg/BruteForce/engine_launch.cpp
         pkg/BruteForce/params.cpp
+        pkg/BruteForce/signed_pack.cpp
         pkg/BruteForce/stress.cpp
         pkg/BruteForce/topology.cpp
         pkg/BruteForce/alpha/engine.cpp

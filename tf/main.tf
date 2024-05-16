@@ -86,12 +86,24 @@ module "run" {
     source = "./modules/job"
     ig_service_account_id = module.prepare-ig.service_account_id
     vm_service_account_id = yandex_iam_service_account.vm.id
-    spec = templatefile("${path.module}/spec-match-181.yaml", {"version" = "v16"})
+    spec = templatefile("${path.module}/spec-match-181.yaml", {"version" = "v17"})
     subnet_id = yandex_vpc_subnet.main.id
     name = "my3"
     enabled = true
 }
 
+
+module "run2" {
+    source = "./modules/job"
+    ig_service_account_id = module.prepare-ig.service_account_id
+    vm_service_account_id = yandex_iam_service_account.vm.id
+    spec = templatefile("${path.module}/spec-match-181-big.yaml", {"version" = "v17"})
+    subnet_id = yandex_vpc_subnet.main.id
+    name = "my2"
+    enabled = true
+    cores = 32
+    ram = 32
+}
 module "s3-setup" {
     source = "./modules/s3-setup"
     folder_id = "b1g36mtre1jd6jubc7go"

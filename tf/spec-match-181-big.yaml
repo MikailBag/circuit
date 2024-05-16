@@ -18,9 +18,9 @@ services:
     command:
       - 'find-all-outputs-release'
       - '--node-count'
-      - '6'
+      - '7'
       - '--config'
-      - '(eval=(engine=[beta:()],settings=(max_bits=8,second_output=[enabled:(x=181,y=-181)])),launch=(parallel=true))'
+      - '(eval=(engine=[beta:()],settings=(max_bits=8,second_output=[enabled:(x=181,y=-181)])),launch=(parallel=true,thread_count=16))'
       - '--output-path'
       - '/out/6s'
     restart: none
@@ -31,9 +31,9 @@ services:
     command:
       - 'find-all-outputs-release'
       - '--node-count'
-      - '6'
+      - '7'
       - '--config'
-      - '(eval=(engine=[beta:()],settings=(max_bits=9,second_output=[enabled:(x=181,y=-181)])),launch=(parallel=true))'
+      - '(eval=(engine=[beta:()],settings=(max_bits=9,second_output=[enabled:(x=181,y=-181)])),launch=(parallel=true,thread_count=16))'
       - '--output-path'
       - '/out/6l'
     restart: none

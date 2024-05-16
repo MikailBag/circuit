@@ -3,6 +3,8 @@
 
 #include "bitset.h"
 #include "engine_launch.h"
+#include "signed_pack.h"
+
 #include "isomorphism/filter.h"
 #include "isomorphism/key.h"
 
@@ -113,10 +115,10 @@ std::vector<Topology> FilterTopologies(FilterParams const& p, std::span<Topology
     return res;
 }
 
-std::vector<uint64_t> FindAllOutputs(FindOutputsParams const& p, std::vector<Topology> const& topologies) {
+std::vector<int64_t> FindAllOutputs(FindOutputsParams const& p, std::vector<Topology> const& topologies) {
     ValidateFindOutputParams(p);
 
-    std::vector<uint64_t> ans;
+    std::vector<int64_t> ans;
     EngineParams ep {p.config};
     ep.inputCount = p.inputCount;
     ep.maxExplicitNodeCount = p.maxExplicitNodeCount;
@@ -126,7 +128,7 @@ std::vector<uint64_t> FindAllOutputs(FindOutputsParams const& p, std::vector<Top
         InvokeEngine(ep, p.launchConfig, topologies, &out, nullptr);
         for (size_t i = 0; i < out.size()[0]; ++i) {
             if (out.At(i)) {
-                ans.push_back(static_cast<uint64_t>(i));
+                ans.push_back(UnpackSigned(static_cast<uint64_t>(i)));
             }
         }
     } else if (p.inputCount == 2) {
@@ -135,8 +137,8 @@ std::vector<uint64_t> FindAllOutputs(FindOutputsParams const& p, std::vector<Top
         for (size_t i = 0; i < out.size()[0]; i++) {
             for (size_t j = 0; j < out.size()[1]; j++) {
                 if (out.At(i, j)) {
-                    ans.push_back(static_cast<uint64_t>(i));
-                    ans.push_back(static_cast<uint64_t>(j));
+                    ans.push_back(UnpackSigned(static_cast<uint64_t>(i)));
+                    ans.push_back(UnpackSigned(static_cast<uint64_t>(j)));
                 }
             }
         }

@@ -19,8 +19,9 @@ struct BoolDesc {
 
 struct NumDesc {
     std::function<std::from_chars_result(std::string_view)> parser;
-    explicit NumDesc(size_t& field);
-    explicit NumDesc(uint8_t& field);
+    #define X(ty)  explicit NumDesc(ty& field);
+    #include "conf/supported_int_types.inc.x"
+    #undef X
 };
 
 // using ErasedPostprocessFunc = void(*)(void*);

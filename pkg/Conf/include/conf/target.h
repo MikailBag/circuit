@@ -13,8 +13,9 @@ class ObjectDescription {
 public:
     virtual ObjectDescription& ObjField(std::string_view name, Target& f) = 0;
     virtual ObjectDescription& BoolField(std::string_view name, bool& f) = 0;
-    virtual ObjectDescription& NumField(std::string_view name, size_t& f) = 0;
-    virtual ObjectDescription& NumField(std::string_view name, uint8_t& f) = 0;
+    #define X(ty)  virtual ObjectDescription& NumField(std::string_view name, ty& f) = 0;
+    #include "conf/supported_int_types.inc.x"
+    #undef X
     
     virtual ~ObjectDescription();
 };

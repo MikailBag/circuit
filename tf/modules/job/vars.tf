@@ -22,3 +22,13 @@ variable "enabled" {
   type = bool
   default = true
 }
+
+variable "cores" {
+  type = number
+  default = 16
+}
+
+variable "ram" {
+  type = number
+  default = 16
+}

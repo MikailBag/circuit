@@ -47,8 +47,8 @@ struct EvalEngineConfig : public conf::Target {
 
 struct SecondOutput : public conf::Target {
     struct Enabled : public conf::Target {
-        uint64_t x = 0;
-        uint64_t y = 0;
+        int64_t x = 0;
+        int64_t y = 0;
 
         void Describe(conf::Description& desc) override {
             desc.Object()

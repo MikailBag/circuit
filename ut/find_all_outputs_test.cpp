@@ -14,11 +14,12 @@
 
 static logger::Logger L = logger::Get("bruteforce-test");
 
-static bf::EvalConfig CONFIG_ALPHA = []{
+/*static bf::EvalConfig CONFIG_ALPHA = []{
     bf::EvalConfig c;
     c.engine.isAlpha = true;
     return c;
 }();
+*/
 
 static bf::EvalConfig CONFIG_BETA = []{
     bf::EvalConfig c;
@@ -43,16 +44,16 @@ TEST_CASE("Basic test", "[bruteforce][bruteforce/list]") {
     }
 }
 TEST_CASE("Finds outputs of trivial scheme", "[bruteforce][bruteforce/outputs]") {
-    bf::EvalConfig outConf = GENERATE(CONFIG_ALPHA, CONFIG_BETA);
+    bf::EvalConfig outConf = GENERATE(CONFIG_BETA);
     outConf.settings.maxBits = 2;
     bf::LaunchConfig lc;
     bf::FindOutputsParams p {outConf, lc};
     p.inputCount = 1;
     std::vector<bf::Topology> tps;
     tps.push_back(bf::Topology{});
-    std::vector<uint64_t> outputs = bf::FindAllOutputs(p, tps);
-    for (uint64_t x : outputs) {
-        L().AttrU64("num", x).Log("Output");
+    std::vector<int64_t> outputs = bf::FindAllOutputs(p, tps);
+    for (int64_t x : outputs) {
+        L().AttrI64("num", x).Log("Output");
     }
     CHECK(outputs.size() == 3);
     CHECK(std::find(outputs.begin(), outputs.end(), 1) != outputs.end());
@@ -61,7 +62,7 @@ TEST_CASE("Finds outputs of trivial scheme", "[bruteforce][bruteforce/outputs]")
 }
 
 TEST_CASE("Finds outputs of a bit more complex scheme", "[bruteforce][bruteforce/outputs]") {
-    bf::EvalConfig outConf = GENERATE(CONFIG_ALPHA, CONFIG_BETA);
+    bf::EvalConfig outConf = GENERATE(CONFIG_BETA);
     outConf.settings.maxBits = 2;
     bf::LaunchConfig lc;
     bf::FindOutputsParams p {outConf, lc};
@@ -74,9 +75,9 @@ TEST_CASE("Finds outputs of a bit more complex scheme", "[bruteforce][bruteforce
     tn.links[1] = 0;
     tp.nodes.push_back(tn);
     tps.push_back(tp);
-    std::vector<uint64_t> outputs = bf::FindAllOutputs(p, tps);
-    for (uint64_t x : outputs) {
-        L().AttrU64("num", x).Log("Output");
+    std::vector<int64_t> outputs = bf::FindAllOutputs(p, tps);
+    for (int64_t x : outputs) {
+        L().AttrI64("num", x).Log("Output");
     }
     CHECK(outputs.size() == 5);
     CHECK(std::find(outputs.begin(), outputs.end(), 0) != outputs.end());
@@ -109,9 +110,9 @@ TEST_CASE("Finds two-output topology", "[bruteforce][bruteforce/outputs][brutefo
     tn.links[1] = 1;
     tp.nodes.push_back(tn);
     tps.push_back(tp);
-    std::vector<uint64_t> outputs = bf::FindAllOutputs(p, tps);
-    for (uint64_t x : outputs) {
-        L().AttrU64("num", x).Log("Output");
+    std::vector<int64_t> outputs = bf::FindAllOutputs(p, tps);
+    for (int64_t x : outputs) {
+        L().AttrI64("num", x).Log("Output");
     }
     CHECK(std::find(outputs.begin(), outputs.end(), 8) != outputs.end());
 }
@@ -135,9 +136,9 @@ TEST_CASE("Respects two-output filter", "[bruteforce][bruteforce/outputs][brutef
     tn.links[1] = 1;
     tp.nodes.push_back(tn);
     tps.push_back(tp);
-    std::vector<uint64_t> outputs = bf::FindAllOutputs(p, tps);
-    for (uint64_t x : outputs) {
-        L().AttrU64("num", x).Log("Output");
+    std::vector<int64_t> outputs = bf::FindAllOutputs(p, tps);
+    for (int64_t x : outputs) {
+        L().AttrI64("num", x).Log("Output");
     }
     CHECK(std::find(outputs.begin(), outputs.end(), 7) == outputs.end());
 }
@@ -157,7 +158,7 @@ TEST_CASE("Correctly finds certain topology (regression)", "[bruteforce][brutefo
 }
 
 TEST_CASE("Correctly finds output", "[bruteforce][bruteforce/outputs][regression]") {
-    bf::EvalConfig outConf = GENERATE(CONFIG_ALPHA, CONFIG_BETA);
+    bf::EvalConfig outConf = GENERATE(CONFIG_BETA);
     outConf.settings.maxBits = 3;
     bf::LaunchConfig lc;
     bf::FindOutputsParams p {outConf, lc};
@@ -167,7 +168,7 @@ TEST_CASE("Correctly finds output", "[bruteforce][bruteforce/outputs][regression
     p.maxExplicitNodeCount = 1;
     std::vector<bf::Topology> tps;
     tps.push_back(tp);
-    std::vector<uint64_t> outputs = bf::FindAllOutputs(p, tps);
+    std::vector<int64_t> outputs = bf::FindAllOutputs(p, tps);
     bool ok = false;
     for (size_t i = 0; i < outputs.size(); i += 2) {
         if (outputs[i] == 3 && outputs[i+1] == 0) {

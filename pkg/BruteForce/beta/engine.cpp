@@ -2,6 +2,8 @@
 
 #include "bruteforce/topology.h"
 
+#include "signed_pack.h"
+
 #include "log/log.h"
 
 #include <span>
@@ -60,6 +62,7 @@ std::array<int64_t, N> Normalize(std::array<int64_t, N> val) {
     for (size_t i = 0; i < N; i++) {
         if (val[i] < 0) {
             needsNegation = true;
+            break;
         } else if (val[i] > 0) {
             break;
         }
@@ -74,41 +77,22 @@ std::array<int64_t, N> Normalize(std::array<int64_t, N> val) {
     return val;
 }
 
+/**/
+
 template<size_t N>
-std::array<uint64_t, N> TryNormalizeForSink(std::array<int64_t, N> val, bool& ok) {
-    bool allPos = true;
-    bool allNeg = true;
+std::array<uint64_t, N> ToIndex(std::array<int64_t, N> val) {
+    std::array<uint64_t, N> res;
     for (size_t i = 0; i < N; i++) {
-        if (val[i] > 0) {
-            allNeg = false;
-        }
-        if (val[i] < 0) {
-            allPos = false;
-        }
+        res[i] = PackSigned(val[i]);
     }
-    if (!allNeg && !allPos) {
-        ok = false;
-        return {};
-    }
-    std::array<uint64_t, N> out;
-    if (allPos) {
-        for (size_t i = 0; i < N; i++) {
-            out[i] = static_cast<uint64_t>(val[i]);
-        }
-    } else {
-        for (size_t i = 0; i < N; i++) {
-            out[i] = static_cast<uint64_t>(-val[i]);
-        }
-    }
-    ok = true;
-    return out;
+    return res;
 }
 
 template<size_t N>
 struct State {
     uint8_t bits;
     bool enableSecondOutputFilter = false;
-    std::array<uint64_t, N> expectedSecondOutput;
+    std::array<int64_t, N> expectedSecondOutput;
 
 };
 
@@ -126,29 +110,20 @@ void FindTopologyOutputsImpl(State<N> const& s, Topology const& t, bs::BitSet<N>
             
         }
         if (isSink) {
-            bool ok;
-            std::array<uint64_t, N> idx = TryNormalizeForSink(res, ok);
             if (s->enableSecondOutputFilter) {
-                bool ok2;
-                std::array<uint64_t, N> idx2 = TryNormalizeForSink(buf[pos-1], ok2);
-                if (!ok2) {
-                    return;
-                }
-                if (idx2 != s->expectedSecondOutput) {
-                    if (idx != s->expectedSecondOutput) {
+                std::array<int64_t, N> prevRes = buf[pos-1];
+                if (prevRes != s->expectedSecondOutput) {
+                    if (res != s->expectedSecondOutput) {
                         return;
                     }
-                    idx = idx2;
+                    res = prevRes;
                 }
             }
-            while (ok) {
-                ans.get().PutArr(true, idx);
+            while (true) {
+                ans.get().PutArr(true, ToIndex(res));
                 res = MulBy2(res);
-                ok = (AbsMax(res) <= maxVal);
-                if (ok) {
-                    idx = TryNormalizeForSink(res, ok);
-                }
-                if (AbsMax(res) == 0) {
+                uint64_t mx = AbsMax(res);
+                if (mx == 0 || mx > maxVal) {
                     break;
                 }
             }
