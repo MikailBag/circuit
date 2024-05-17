@@ -9,6 +9,7 @@ resource "yandex_compute_instance_group" "main" {
     }
     name = "job-${var.name}"
     instance_template {
+        name = var.legacy_naming ? null : "job-${var.name}-{instance.short_id}"
         service_account_id = var.vm_service_account_id
         resources {
             cores = var.cores

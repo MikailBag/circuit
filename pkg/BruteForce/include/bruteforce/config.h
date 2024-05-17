@@ -5,31 +5,49 @@
 #include <memory>
 
 namespace bf {
-struct EvalAlphaConfig: public conf::Target {
-    void Describe(conf::Description& desc) override {
-        desc.Object();
-    }
 
-    void Postprocess() override {
-    }
-};
-struct EvalBetaConfig : public conf::Target {
-    bool skipValidation = false;
-    bool forceDummy = false;
-
-    void Describe(conf::Description& desc) override {
-        desc.Object()
-            .BoolField("skip_validation", skipValidation)
-            .BoolField("force_dummy", forceDummy);
-    }
-
-    void Postprocess() override;
-};
 
 struct EvalEngineConfig : public conf::Target {
-    EvalAlphaConfig alpha;
+    struct Alpha : public conf::Target {
+        void Describe(conf::Description& desc) override {
+            desc.Object();
+        }
+
+        void Postprocess() override {
+        }
+    };
+    struct Beta : public conf::Target {
+        struct PrintTopology : public conf::Target {
+            bool enabled = false;
+            int64_t x = 0;
+            int64_t y = 0;
+
+            void Describe(conf::Description& desc) override {
+                desc.Object()
+                    .BoolField("enabled", enabled)
+                    .NumField("x", x)
+                    .NumField("y", y);
+            }
+
+            void Postprocess() override;
+        };
+        bool skipValidation = false;
+        bool forceDummy = false;
+        PrintTopology printTopology;
+
+        void Describe(conf::Description& desc) override {
+            desc.Object()
+                .BoolField("skip_validation", skipValidation)
+                .BoolField("force_dummy", forceDummy)
+                .ObjField("print_topology", printTopology);
+        }
+
+        void Postprocess() override;
+    };
+
+    Alpha alpha;
     bool isAlpha = false;
-    EvalBetaConfig beta;
+    Beta beta;
     bool isBeta = false;
 
     void Describe(conf::Description& desc) override {

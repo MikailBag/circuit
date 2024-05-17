@@ -20,9 +20,18 @@ void ShardingConfig::RangeSharding::Postprocess() {
     }
 }
 
-void EvalBetaConfig::Postprocess() {
+void EvalEngineConfig::Beta::Postprocess() {
     if (skipValidation) {
         throw conf::BindingException("TODO");
+    }
+}
+
+void EvalEngineConfig::Beta::PrintTopology::Postprocess() {
+    if (enabled) {
+        return;
+    }
+    if (x != 0 || y != 0) {
+        throw conf::BindingException("x or y can not be set when enabled is false");
     }
 }
 }

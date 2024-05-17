@@ -32,3 +32,8 @@ variable "ram" {
   type = number
   default = 16
 }
+
+variable "legacy_naming" {
+  type = bool
+  default = false
+}

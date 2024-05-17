@@ -90,6 +90,17 @@ module "run" {
     subnet_id = yandex_vpc_subnet.main.id
     name = "my3"
     enabled = true
+    legacy_naming = true
+}
+
+module "run-confirm" {
+    source = "./modules/job"
+    ig_service_account_id = module.prepare-ig.service_account_id
+    vm_service_account_id = yandex_iam_service_account.vm.id
+    spec = templatefile("${path.module}/spec-match-181-confirm.yaml", {"version" = "v18"})
+    subnet_id = yandex_vpc_subnet.main.id
+    name = "confirm"
+    enabled = true
 }
 
 
@@ -103,6 +114,7 @@ module "run2" {
     enabled = true
     cores = 32
     ram = 32
+    legacy_naming = true
 }
 module "s3-setup" {
     source = "./modules/s3-setup"

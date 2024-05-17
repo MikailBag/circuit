@@ -6,6 +6,8 @@
 
 #include "log/log.h"
 
+#include <iostream>
+#include <format>
 #include <span>
 #include <stdexcept>
 #include <utility>
@@ -77,8 +79,6 @@ std::array<int64_t, N> Normalize(std::array<int64_t, N> val) {
     return val;
 }
 
-/**/
-
 template<size_t N>
 std::array<uint64_t, N> ToIndex(std::array<int64_t, N> val) {
     std::array<uint64_t, N> res;
@@ -91,8 +91,12 @@ std::array<uint64_t, N> ToIndex(std::array<int64_t, N> val) {
 template<size_t N>
 struct State {
     uint8_t bits;
+
     bool enableSecondOutputFilter = false;
     std::array<int64_t, N> expectedSecondOutput;
+
+    bool enablePrintTopology = false;
+    std::array<int64_t, N> expectedOutput;
 
 };
 
@@ -106,9 +110,6 @@ void FindTopologyOutputsImpl(State<N> const& s, Topology const& t, bs::BitSet<N>
         if (AbsMax(res) > maxVal) {
             return;
         }
-        if (isPotentialSecondOutput && s->enableSecondOutputFilter) {
-            
-        }
         if (isSink) {
             if (s->enableSecondOutputFilter) {
                 std::array<int64_t, N> prevRes = buf[pos-1];
@@ -120,6 +121,25 @@ void FindTopologyOutputsImpl(State<N> const& s, Topology const& t, bs::BitSet<N>
                 }
             }
             while (true) {
+                if (s->enablePrintTopology && res == s->expectedOutput) {
+                    // TODO: report back in structured way
+                    std::cout << "!!! reached desired output !!!" << std::endl;
+                    std::cout << "links:" << std::endl;
+                    for (auto const& n : t.get().nodes.span()) {
+                        std::cout << std::format("\t({} {})", n.links[0], n.links[1]) << std::endl;
+                    }
+                    std::cout << "fundamentals:" << std::endl;
+                    for (auto const& n : buf) {
+                        std::string desc;
+                        if constexpr (N == 1) {
+                            desc = std::format("{}", n[0]);
+                        } else {
+                            desc = std::format("({}, {})", n[0], n[1]);
+                        }
+                        std::cout << std::format("\t={}", desc) << std::endl;
+                    }
+                    std::cout << "---";
+                }
                 ans.get().PutArr(true, ToIndex(res));
                 res = MulBy2(res);
                 uint64_t mx = AbsMax(res);
@@ -165,7 +185,7 @@ void FindTopologyOutputsImpl(State<N> const& s, Topology const& t, bs::BitSet<N>
 }
 
 template<size_t N>
-void FindAllOutputsBulk(EvalConfig::Settings const& settings, std::function<void()> func, std::span<Topology const> topologies, bs::BitSet<N>& out, EvalBetaConfig const& conf) {
+void FindAllOutputsBulk(EvalConfig::Settings const& settings, std::function<void()> func, std::span<Topology const> topologies, bs::BitSet<N>& out, EvalEngineConfig::Beta const& conf) {
     L().AttrU64("cnt", topologies.size()).AttrS("engine", "beta").Log("Starting");
     std::vector<std::array<int64_t, N>> buf;
     buf.resize(kMaxExplicitNodeCount + kMaxInCount);
@@ -186,7 +206,19 @@ void FindAllOutputsBulk(EvalConfig::Settings const& settings, std::function<void
                     assert(false);
                 }
             }
+            if (conf.printTopology.enabled) {
+                s.enablePrintTopology = true;
+                s.expectedOutput = {};
+                if constexpr (N == 1) {
+                    s.expectedOutput = {conf.printTopology.x};
+                } else if (N == 2) {
+                    s.expectedOutput = {conf.printTopology.x, conf.printTopology.y};
+                } else {
+                    assert(false);
+                }
+            }
             s.bits = settings.maxBits;
+            
             
             FindTopologyOutputsImpl<N>(s, t, out, bufView, 0);
         }
@@ -196,7 +228,7 @@ void FindAllOutputsBulk(EvalConfig::Settings const& settings, std::function<void
     }
 }
 
-template void FindAllOutputsBulk<1>(EvalConfig::Settings const&, std::function<void()>, std::span<Topology const>, bs::BitSet<1>&, EvalBetaConfig const& conf);
-template void FindAllOutputsBulk<2>(EvalConfig::Settings const&, std::function<void()>, std::span<Topology const>, bs::BitSet<2>&, EvalBetaConfig const& conf);
+template void FindAllOutputsBulk<1>(EvalConfig::Settings const&, std::function<void()>, std::span<Topology const>, bs::BitSet<1>&, EvalEngineConfig::Beta const& conf);
+template void FindAllOutputsBulk<2>(EvalConfig::Settings const&, std::function<void()>, std::span<Topology const>, bs::BitSet<2>&, EvalEngineConfig::Beta const& conf);
 
 }
