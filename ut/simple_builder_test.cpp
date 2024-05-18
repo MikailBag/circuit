@@ -1,5 +1,5 @@
 #include "simple_builder.h"
-#include "graph.h"
+#include "core/graph.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>

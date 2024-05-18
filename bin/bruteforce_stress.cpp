@@ -62,8 +62,8 @@ int main(int argc, char** argv) {
     tp.inputCount = std::stoi(opts["input-count"]);
     tp.explicitNodeCountLimit = std::stoi(opts["node-count"]);
 
-    bf::FindOutputsParams opLeft {leftConfig, launchConfig};
-    bf::FindOutputsParams opRight {rightConfig, launchConfig};
+    bf::EvalParams opLeft {leftConfig, launchConfig};
+    bf::EvalParams opRight {rightConfig, launchConfig};
     opLeft.maxExplicitNodeCount = opRight.maxExplicitNodeCount = tp.explicitNodeCountLimit;
     opLeft.inputCount = opRight.inputCount = tp.inputCount;
     
@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
               << std::endl;
     
 
-    std::vector<bf::Topology> topologies = bf::FindAllTopologies(tp);
+    std::vector<bf::Topology> topologies = bf::FindTopologies(tp);
 
     std::cout << "Topology count: " << topologies.size() << std::endl;
 
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
 
     std::cout << "Unique topology count: " << uniqueTopologies.size() << std::endl;
 
-    std::optional<bf::Mismatch> failure = bf::Compare(opLeft, opRight, uniqueTopologies);
+    std::optional<bf::stress::Mismatch> failure = bf::stress::Compare(opLeft, opRight, uniqueTopologies);
     if (!failure) {
         std::cout << "No differences found" << std::endl;
         return 0;

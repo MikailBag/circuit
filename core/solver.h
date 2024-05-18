@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graph.h"
+#include "core/graph.h"
 
 #include <string_view>
 #include <span>

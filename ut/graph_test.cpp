@@ -1,4 +1,4 @@
-#include "graph.h"
+#include "core/graph.h"
 #include "graph_builder.h"
 #include <catch2/catch_test_macros.hpp>
 

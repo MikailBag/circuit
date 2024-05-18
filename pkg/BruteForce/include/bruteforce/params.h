@@ -2,6 +2,8 @@
 
 #include "config.h"
 
+#include "core/graph.h"
+
 #include <functional>
 
 
@@ -19,14 +21,15 @@ struct FilterParams {
     explicit FilterParams(FilterConfig const& c) : config(c) {}
 };
 
-struct FindOutputsParams {
+struct EvalParams {
     EvalConfig const& config;
     LaunchConfig const& launchConfig;
     size_t maxExplicitNodeCount = 0;
     size_t inputCount = 0;
     std::function<void()> progressListener;
+    std::function<void(Graph)> graphListener;
 
-    FindOutputsParams(EvalConfig const& ec, LaunchConfig const& lc) : config(ec), launchConfig(lc) {}
+    EvalParams(EvalConfig const& ec, LaunchConfig const& lc) : config(ec), launchConfig(lc) {}
 };
 
 }

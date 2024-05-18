@@ -2,9 +2,9 @@
 
 #include "engine_launch.h"
 
-namespace bf {
+namespace bf::stress {
 
-std::optional<Mismatch> Compare(FindOutputsParams const& left, FindOutputsParams const& right, std::vector<Topology> const& topologies) {
+std::optional<Mismatch> Compare(EvalParams const& left, EvalParams const& right, std::vector<Topology> const& topologies) {
     EngineParams epLeft {left.config};
     EngineParams epRight {right.config};
     assert(left.inputCount == right.inputCount);

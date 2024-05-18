@@ -31,13 +31,13 @@ TEST_CASE("Basic test", "[bruteforce][bruteforce/list]") {
     bf::FindTopologyParams p;
     p.explicitNodeCountLimit = 1;
     p.inputCount = 2;
-    std::vector<bf::Topology> out = bf::FindAllTopologies(p);
+    std::vector<bf::Topology> out = bf::FindTopologies(p);
     CHECK(out.size() == 3);
     for (bf::Topology const& t : out) {
         CHECK(t.nodes.size() == 1);
     }
     p.inputCount = 1;
-    out = bf::FindAllTopologies(p);
+    out = bf::FindTopologies(p);
     CHECK(out.size() == 1);
     for (bf::Topology const& t : out) {
         CHECK(t.nodes.size() == 1);
@@ -47,11 +47,11 @@ TEST_CASE("Finds outputs of trivial scheme", "[bruteforce][bruteforce/outputs]")
     bf::EvalConfig outConf = GENERATE(CONFIG_BETA);
     outConf.settings.maxBits = 2;
     bf::LaunchConfig lc;
-    bf::FindOutputsParams p {outConf, lc};
+    bf::EvalParams p {outConf, lc};
     p.inputCount = 1;
     std::vector<bf::Topology> tps;
     tps.push_back(bf::Topology{});
-    std::vector<int64_t> outputs = bf::FindAllOutputs(p, tps);
+    std::vector<int64_t> outputs = bf::EvalTopologies(p, tps);
     for (int64_t x : outputs) {
         L().AttrI64("num", x).Log("Output");
     }
@@ -65,7 +65,7 @@ TEST_CASE("Finds outputs of a bit more complex scheme", "[bruteforce][bruteforce
     bf::EvalConfig outConf = GENERATE(CONFIG_BETA);
     outConf.settings.maxBits = 2;
     bf::LaunchConfig lc;
-    bf::FindOutputsParams p {outConf, lc};
+    bf::EvalParams p {outConf, lc};
     p.maxExplicitNodeCount = 1;
     p.inputCount = 1;
     std::vector<bf::Topology> tps;
@@ -75,7 +75,7 @@ TEST_CASE("Finds outputs of a bit more complex scheme", "[bruteforce][bruteforce
     tn.links[1] = 0;
     tp.nodes.push_back(tn);
     tps.push_back(tp);
-    std::vector<int64_t> outputs = bf::FindAllOutputs(p, tps);
+    std::vector<int64_t> outputs = bf::EvalTopologies(p, tps);
     for (int64_t x : outputs) {
         L().AttrI64("num", x).Log("Output");
     }
@@ -93,7 +93,7 @@ TEST_CASE("Finds two-output topology", "[bruteforce][bruteforce/outputs][brutefo
     evalConf.settings.secondOutput.isEnabled = true;
     evalConf.settings.secondOutput.enabled.x = 5;
     bf::LaunchConfig lc;
-    bf::FindOutputsParams p {evalConf, lc};
+    bf::EvalParams p {evalConf, lc};
     p.maxExplicitNodeCount = 2;
     p.inputCount = 1;
     /*
@@ -110,7 +110,7 @@ TEST_CASE("Finds two-output topology", "[bruteforce][bruteforce/outputs][brutefo
     tn.links[1] = 1;
     tp.nodes.push_back(tn);
     tps.push_back(tp);
-    std::vector<int64_t> outputs = bf::FindAllOutputs(p, tps);
+    std::vector<int64_t> outputs = bf::EvalTopologies(p, tps);
     for (int64_t x : outputs) {
         L().AttrI64("num", x).Log("Output");
     }
@@ -123,7 +123,7 @@ TEST_CASE("Respects two-output filter", "[bruteforce][bruteforce/outputs][brutef
     evalConf.settings.secondOutput.isEnabled = true;
     evalConf.settings.secondOutput.enabled.x = 21;
     bf::LaunchConfig lc;
-    bf::FindOutputsParams p {evalConf, lc};
+    bf::EvalParams p {evalConf, lc};
     p.maxExplicitNodeCount = 2;
     p.inputCount = 1;
     std::vector<bf::Topology> tps;
@@ -136,7 +136,7 @@ TEST_CASE("Respects two-output filter", "[bruteforce][bruteforce/outputs][brutef
     tn.links[1] = 1;
     tp.nodes.push_back(tn);
     tps.push_back(tp);
-    std::vector<int64_t> outputs = bf::FindAllOutputs(p, tps);
+    std::vector<int64_t> outputs = bf::EvalTopologies(p, tps);
     for (int64_t x : outputs) {
         L().AttrI64("num", x).Log("Output");
     }
@@ -147,7 +147,7 @@ TEST_CASE("Correctly finds certain topology (regression)", "[bruteforce][brutefo
     bf::FindTopologyParams p;
     p.explicitNodeCountLimit = 1;
     p.inputCount = 2;
-    std::vector<bf::Topology> out = bf::FindAllTopologies(p);
+    std::vector<bf::Topology> out = bf::FindTopologies(p);
     bool ok = false;
     for (bf::Topology const& t : out) {
         if (t.nodes[0].links[0] == 0 && t.nodes[0].links[1] == 0) {
@@ -161,14 +161,14 @@ TEST_CASE("Correctly finds output", "[bruteforce][bruteforce/outputs][regression
     bf::EvalConfig outConf = GENERATE(CONFIG_BETA);
     outConf.settings.maxBits = 3;
     bf::LaunchConfig lc;
-    bf::FindOutputsParams p {outConf, lc};
+    bf::EvalParams p {outConf, lc};
     bf::Topology tp;
     tp.nodes.push_back(TopologyNode{.links={0, 0}});
     p.inputCount = 2;
     p.maxExplicitNodeCount = 1;
     std::vector<bf::Topology> tps;
     tps.push_back(tp);
-    std::vector<int64_t> outputs = bf::FindAllOutputs(p, tps);
+    std::vector<int64_t> outputs = bf::EvalTopologies(p, tps);
     bool ok = false;
     for (size_t i = 0; i < outputs.size(); i += 2) {
         if (outputs[i] == 3 && outputs[i+1] == 0) {

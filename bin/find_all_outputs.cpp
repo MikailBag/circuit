@@ -6,7 +6,7 @@
 #include "conf/parse.h"
 #include "conf/validation.h"
 
-#include "graph.h"
+#include "core/graph.h"
 
 #include <atomic>
 #include <chrono>
@@ -166,14 +166,14 @@ int main(int argc, char** argv) {
         tp.inputCount = std::stoi(opts["input-count"]);
         tp.explicitNodeCountLimit = nodeCount;
 
-        bf::FindOutputsParams op {config.eval, config.launch};
+        bf::EvalParams op {config.eval, config.launch};
         op.maxExplicitNodeCount = nodeCount;
         op.inputCount = tp.inputCount;
         std::cout << "Input count: " << op.inputCount
                   << ", node count: " << nodeCount
                   << std::endl;
 
-        std::vector<bf::Topology> topologies = bf::FindAllTopologies(tp);
+        std::vector<bf::Topology> topologies = bf::FindTopologies(tp);
 
         std::cout << "Topology count: " << topologies.size() << std::endl;
 
@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
             }
         };
 
-        std::vector<int64_t> outputs = bf::FindAllOutputs(op, uniqueTopologies);
+        std::vector<int64_t> outputs = bf::EvalTopologies(op, uniqueTopologies);
         assert(outputs.size() % op.inputCount == 0);
         outputWriter->WriteOutputs({outputs.data(), outputs.size()}, op.inputCount);
     }

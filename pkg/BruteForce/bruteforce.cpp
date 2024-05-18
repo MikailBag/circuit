@@ -40,7 +40,7 @@ void Go(FindTopologyParams const& p, std::vector<Topology> const& curLayer, std:
     }
 }
 
-void ValidateFindOutputParams(FindOutputsParams const& p) {
+void ValidateEvalParams(EvalParams const& p) {
     if (p.maxExplicitNodeCount > kMaxExplicitNodeCount) {
         throw std::invalid_argument("maxExplicitNodeCount is too big");
     }
@@ -57,7 +57,7 @@ void ValidateFindTopologyParams(FindTopologyParams const& p) {
 }
 }
 
-std::vector<Topology> FindAllTopologies(FindTopologyParams const& p) {
+std::vector<Topology> detail::BruteforceEntrypoints::FindTopologies(FindTopologyParams const& p) {
     ValidateFindTopologyParams(p);
     std::vector<Topology> out;
     out.push_back(Topology{});
@@ -70,7 +70,7 @@ std::vector<Topology> FindAllTopologies(FindTopologyParams const& p) {
     return out;
 }
 
-std::vector<Topology> FilterTopologies(FilterParams const& p, std::span<Topology const> topologies) {
+std::vector<Topology> detail::BruteforceEntrypoints::FilterTopologies(FilterParams const& p, std::span<Topology const> topologies) {
     L().AttrU64("count", topologies.size()).Log("Filtering topologies");
     if (p.config.sharding.isRange) {
         size_t sz = topologies.size() / p.config.sharding.range.totalPartCount;
@@ -115,8 +115,8 @@ std::vector<Topology> FilterTopologies(FilterParams const& p, std::span<Topology
     return res;
 }
 
-std::vector<int64_t> FindAllOutputs(FindOutputsParams const& p, std::vector<Topology> const& topologies) {
-    ValidateFindOutputParams(p);
+std::vector<int64_t> detail::BruteforceEntrypoints::EvalTopologies(EvalParams const& p, std::vector<Topology> const& topologies) {
+    ValidateEvalParams(p);
 
     std::vector<int64_t> ans;
     EngineParams ep {p.config};

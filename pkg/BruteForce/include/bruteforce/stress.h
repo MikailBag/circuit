@@ -6,7 +6,7 @@
 #include <optional>
 #include <vector>
 
-namespace bf {
+namespace bf::stress {
 struct Mismatch {
     size_t topologyIndex = SIZE_MAX;
     std::vector<uint64_t> output;
@@ -14,5 +14,5 @@ struct Mismatch {
     bool rightResult = false;
 };
 [[nodiscard]]
-std::optional<Mismatch> Compare(FindOutputsParams const& left, FindOutputsParams const& right, std::vector<Topology> const& topologies);
+std::optional<Mismatch> Compare(EvalParams const& left, EvalParams const& right, std::vector<Topology> const& topologies);
 }
