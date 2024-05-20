@@ -128,7 +128,8 @@ void InvokeEngine(EngineParams const& ep, LaunchConfig const& lp, std::vector<To
             }}, topologies, lp, out1, out2, ep.config.settings.maxBits, ep.inputCount);
         } else if (ep.config.engine.isBeta) {
             InvokeEngineImpl(FnEngine{[ep = &ep](std::span<Topology const> topologies, bs::BitSet<1>* out1, [[maybe_unused]] bs::BitSet<2>* out2){
-                beta::FindAllOutputsBulk<1>(ep->config.settings, ep->progressListener, topologies, *out1, ep->config.engine.beta);
+                assert(ep->betaExt != nullptr);
+                beta::FindAllOutputsBulk<1>(ep->config.settings, ep->progressListener, topologies, *out1, ep->config.engine.beta, *ep->betaExt);
             }}, topologies, lp, out1, out2, ep.config.settings.maxBits, ep.inputCount);
         }
     } else if (ep.inputCount == 2) {
@@ -139,7 +140,8 @@ void InvokeEngine(EngineParams const& ep, LaunchConfig const& lp, std::vector<To
             }}, topologies, lp, out1, out2, ep.config.settings.maxBits, ep.inputCount);
         } else if (ep.config.engine.isBeta) {
             InvokeEngineImpl(FnEngine{[ep = &ep](std::span<Topology const> topologies, [[maybe_unused]] bs::BitSet<1>* out1, bs::BitSet<2>* out2) {
-                beta::FindAllOutputsBulk<2>(ep->config.settings, ep->progressListener, topologies, *out2, ep->config.engine.beta);
+                assert(ep->betaExt != nullptr);
+                beta::FindAllOutputsBulk<2>(ep->config.settings, ep->progressListener, topologies, *out2, ep->config.engine.beta, *ep->betaExt);
             }}, topologies, lp, out1, out2, ep.config.settings.maxBits, ep.inputCount);
         }
     } else {

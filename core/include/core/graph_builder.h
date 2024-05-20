@@ -5,6 +5,8 @@
 
 class GraphBuilder {
 public:
+    explicit GraphBuilder(size_t inputCount);
+
     class LinkB {
         friend class GraphBuilder;
         friend LinkB ByIndex(size_t);
@@ -37,6 +39,7 @@ public:
 private:
     void AddNodeCommon(LinkB const& left, LinkB const& right);
     void AddNode(LinkB left, LinkB right, bool add);
+    size_t mInputCount;
     Graph mG;
 };
 

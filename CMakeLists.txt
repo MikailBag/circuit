@@ -70,6 +70,8 @@ target_sources(
         pkg/BruteForce/alpha/engine.cpp
         pkg/BruteForce/alpha/eval_topology.cpp
         pkg/BruteForce/beta/engine.cpp
+        pkg/BruteForce/beta/restore_graph.cpp
+        pkg/BruteForce/beta/well_known.cpp
         pkg/BruteForce/isomorphism/filter.cpp
         pkg/BruteForce/isomorphism/key.cpp
 )

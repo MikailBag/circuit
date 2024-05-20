@@ -61,7 +61,14 @@ class GetLoggerH;
 class Logger final {
     friend class GetLoggerH;
 public:
-    LogEvent operator()() const;
+    LogEvent operator()() const {
+        if (detail::kDisableAllLogs) {
+            return {};
+        }
+        return MakeEvent();
+    }
+private:
+    LogEvent MakeEvent() const;
 private:
     std::string mPrefix;
     bool mEnabled;

@@ -5,12 +5,12 @@
 #include <iostream>
 #include <cassert>
 
-static void SafeShiftErr(uint32_t x, uint32_t shift) {
+static void SafeShiftErr(uint64_t x, uint64_t shift) {
     throw std::overflow_error("overflow when evaluating " + std::to_string(x) + " << " + std::to_string(shift));
 }
 
-static uint32_t SafeShift(uint32_t x, uint32_t shift) {
-    if (shift >= 32) {
+static uint64_t SafeShift(uint64_t x, uint64_t shift) {
+    if (shift >= 64) {
         SafeShiftErr(x, shift);
     }
     if (shift == 0) {
@@ -19,21 +19,21 @@ static uint32_t SafeShift(uint32_t x, uint32_t shift) {
     // x * (1 << shift) < (1 << 32)
     // x < (1 << (32-shift))
     uint32_t bound = 1;
-    bound <<= 32 - shift;
+    bound <<= 64 - shift;
     if (x >= bound) {
         SafeShiftErr(x, shift);
     }
     return (x << shift);
 }
 
-static uint32_t SafeAdd(uint32_t x, uint32_t y) {
+static uint64_t SafeAdd(uint64_t x, uint64_t y) {
     if (x > UINT32_MAX - y) {
         throw std::overflow_error("overflow when evaluating " + std::to_string(x) + " + " + std::to_string(y));
     }
     return x + y;
 }
 
-static uint32_t SubAbs(uint32_t x, uint32_t y) {
+static uint64_t SubAbs(uint64_t x, uint64_t y) {
     if (x >= y) {
         return x - y;
     }
@@ -64,8 +64,8 @@ uint8_t Link::Shift() const {
     return shiftWithSign & kRestoreShiftMark;
 }
 
-std::vector<uint32_t> Evaluate1D(Graph const& g) {
-    std::vector<uint32_t> out;
+std::vector<uint64_t> Evaluate1D(Graph const& g) {
+    std::vector<uint64_t> out;
     out.reserve(g.nodes.size() + 1);
     out.push_back(1);
     for (GraphNode const& n : g.nodes) {
@@ -77,17 +77,40 @@ std::vector<uint32_t> Evaluate1D(Graph const& g) {
         if (i >= out.size() || j >= out.size()) {
             throw std::invalid_argument("invalid index");
         }
-        uint32_t v0 = SafeShift(out[i], n.links[0].Shift());
-        uint32_t v1 = SafeShift(out[j], n.links[1].Shift());
-        uint32_t res;
+        uint64_t v0 = SafeShift(out[i], n.links[0].Shift());
+        uint64_t v1 = SafeShift(out[j], n.links[1].Shift());
+        uint64_t res;
         if (n.links[1].IsNegated()) {
             res = SubAbs(v0, v1);
         } else {
             res = SafeAdd(v0, v1);
         }
-        /*while (res > 0 && res % 2 == 0) {
-            res /= 2;
-        }*/
+        out.push_back(res);
+    }
+    return out;
+}
+
+std::vector<std::pair<int64_t, int64_t>> Evaluate2D(Graph const& g) {
+    std::vector<std::pair<int64_t, int64_t>> out;
+    out.reserve(g.nodes.size() + 2);
+    out.push_back({1, 0});
+    out.push_back({0, 1});
+    for (GraphNode const& n : g.nodes) {
+        auto i = static_cast<size_t>(n.links[0].index);
+        auto j = static_cast<size_t>(n.links[1].index);
+        if (i >= out.size() || j >= out.size()) {
+            throw std::invalid_argument("invalid index");
+        }
+        int64_t v0x = (out[i].first << n.links[0].Shift());
+        int64_t v0y = (out[i].second << n.links[0].Shift());
+        int64_t v1x = (out[j].first << n.links[1].Shift());
+        int64_t v1y = (out[j].second << n.links[1].Shift());
+        std::pair<int64_t, int64_t> res;
+        if (n.links[1].IsNegated()) {
+            res = {SubAbs(v0x, v1x), SubAbs(v0y, v1y)};
+        } else {
+            res = {SafeAdd(v0x, v1x), SafeAdd(v0y, v1y)};
+        }
         out.push_back(res);
     }
     return out;

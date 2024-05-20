@@ -1,5 +1,6 @@
 #pragma once
 
+#include "beta_ext.h"
 #include "config.h"
 
 #include "core/graph.h"
@@ -27,7 +28,7 @@ struct EvalParams {
     size_t maxExplicitNodeCount = 0;
     size_t inputCount = 0;
     std::function<void()> progressListener;
-    std::function<void(Graph)> graphListener;
+    BetaExtensions betaExt;
 
     EvalParams(EvalConfig const& ec, LaunchConfig const& lc) : config(ec), launchConfig(lc) {}
 };

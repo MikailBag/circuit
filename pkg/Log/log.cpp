@@ -4,8 +4,8 @@
 
 #include <iostream>
 #include <mutex>
+#include <set>
 #include <string>
-//#include <set>
 
 using namespace std::string_literals;
 namespace logger {
@@ -38,7 +38,7 @@ void LogEvent::LogImpl(std::string_view message) && {
     std::cout << '\n';
 }
 
-LogEvent Logger::operator()() const {
+LogEvent Logger::MakeEvent() const {
     LogEvent b;
     b.mEnabled = mEnabled;
     if (mEnabled) {
@@ -50,7 +50,6 @@ LogEvent Logger::operator()() const {
 namespace {
 struct LoggingConfig {
     std::unique_ptr<logger::Filter> filter;
-
 };
 
 
@@ -68,12 +67,31 @@ LoggingConfig LoadConfig() {
     return c;
 }
 
+class LoggerRegistry {
+public:
+    void Use(std::string caller) {
+        std::lock_guard g{mMu};
+        if (!mUsed.insert(std::move(caller)).second) {
+            throw std::invalid_argument("logger for " + caller + " already registered");
+        }
+    }
+
+    static LoggerRegistry& GetInstance() {
+        static LoggerRegistry* instance = new LoggerRegistry;
+        return *instance;
+    }
+
+private:
+    std::mutex mMu;
+    std::set<std::string> mUsed;
+};
 }
 
 
 class GetLoggerH {
 public:
     static Logger GetLoggerImpl(std::string caller) {
+        LoggerRegistry::GetInstance().Use(caller);
         Logger l;
         l.mPrefix = "["s + caller + "] ";
         l.mEnabled = IsEnabled(caller);

@@ -123,6 +123,7 @@ std::vector<int64_t> detail::BruteforceEntrypoints::EvalTopologies(EvalParams co
     ep.inputCount = p.inputCount;
     ep.maxExplicitNodeCount = p.maxExplicitNodeCount;
     ep.progressListener = p.progressListener;
+    ep.betaExt = &p.betaExt;
     if (p.inputCount == 1) {
         bs::BitSet<1> out = PrepareBitset1(p.config.settings.maxBits);
         InvokeEngine(ep, p.launchConfig, topologies, &out, nullptr);

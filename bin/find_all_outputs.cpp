@@ -194,6 +194,33 @@ int main(int argc, char** argv) {
                 std::cout << "[" << now << "] " << "Progress: " << finished << " / " << uniqueTopologies.get().size() << std::endl;
             }
         };
+        op.betaExt.topologyPrinter = [inputCount = tp.inputCount](Graph g){
+            std::cout << "!!! reached desired output !!!" << std::endl;
+            assert(g.IsValid(inputCount));
+            auto values = [inputCount, g=&g](){
+                std::vector<std::string> res;
+                if (inputCount == 1) {
+                    std::vector<uint64_t> values = Evaluate1D(*g);
+                    for (uint32_t x : values) {
+                        res.push_back(std::format("{}", x));
+                    }
+                } else if (inputCount == 2) {
+                    std::vector<std::pair<int64_t, int64_t>> values = Evaluate2D(*g);
+                    for (std::pair<int64_t, int64_t> x : values) {
+                        res.push_back(std::format("({}, {})", x.first, x.second));
+                    }
+                } else {
+                    std::abort();
+                }
+                return res;
+            }();
+            assert(values.size() == g.ExplicitNodeCount() + inputCount);
+            std::cout << "links:" << std::endl;
+            for (size_t i = 0; i < g.nodes.size(); i++) {
+                GraphNode const& n = g.nodes[i];
+                std::cout << std::format("\tx{} = x{} + x{} = {}", i+inputCount, n.links[0].index, n.links[1].index, values[i + inputCount]) << std::endl;
+            }
+        };
 
         std::vector<int64_t> outputs = bf::EvalTopologies(op, uniqueTopologies);
         assert(outputs.size() % op.inputCount == 0);

@@ -19,12 +19,14 @@ struct EvalEngineConfig : public conf::Target {
     struct Beta : public conf::Target {
         struct PrintTopology : public conf::Target {
             bool enabled = false;
+            bool wellKnown = false;
             int64_t x = 0;
             int64_t y = 0;
 
             void Describe(conf::Description& desc) override {
                 desc.Object()
                     .BoolField("enabled", enabled)
+                    .BoolField("well_known", wellKnown)
                     .NumField("x", x)
                     .NumField("y", y);
             }

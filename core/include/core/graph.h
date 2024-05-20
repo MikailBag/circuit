@@ -41,6 +41,6 @@ struct Graph {
     }
 };
 
-std::vector<uint32_t> Evaluate1D(Graph const& g);
-std::vector<std::pair<uint32_t, uint32_t>> Evaluate2D(Graph const& g);
+std::vector<uint64_t> Evaluate1D(Graph const& g);
+std::vector<std::pair<int64_t, int64_t>> Evaluate2D(Graph const& g);
 std::vector<std::string> Describe(Graph const& g);

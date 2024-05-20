@@ -1,5 +1,8 @@
-#include "graph_builder.h"
+#include "core/graph_builder.h"
 #include <stdexcept>
+
+GraphBuilder::GraphBuilder(size_t inputCount) : mInputCount(inputCount) {
+}
 
 GraphBuilder::LinkB& GraphBuilder::LinkB::Shifted(size_t shift) && {
     if (mShiftSet) {
@@ -14,10 +17,10 @@ void GraphBuilder::AddNodeCommon(LinkB const& left, LinkB const& right) {
     if (!left.mShiftSet || !right.mShiftSet) {
         throw std::logic_error("Shifted() was not called");
     }
-    if (left.mIdx > mG.nodes.size()) {
+    if (left.mIdx >= mG.nodes.size() + mInputCount) {
         throw std::invalid_argument("left link has too big index");
     }
-    if (right.mIdx > mG.nodes.size()) {
+    if (right.mIdx >= mG.nodes.size() + mInputCount) {
         throw std::invalid_argument("right link has too big index");
     }
 }

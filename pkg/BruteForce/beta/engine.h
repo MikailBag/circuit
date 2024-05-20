@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bruteforce/beta_ext.h"
 #include "bruteforce/config.h"
 #include "bruteforce/topology.h"
 
@@ -10,5 +11,5 @@
 
 namespace bf::beta {
 template<size_t N>
-void FindAllOutputsBulk(EvalConfig::Settings const& settings, std::function<void()> func, std::span<Topology const> topologies, bs::BitSet<N>& out, EvalEngineConfig::Beta const& conf);
+void FindAllOutputsBulk(EvalConfig::Settings const& settings, std::function<void()> func, std::span<Topology const> topologies, bs::BitSet<N>& out, EvalEngineConfig::Beta const& conf, BetaExtensions const& ext);
 }

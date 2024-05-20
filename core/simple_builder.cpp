@@ -1,6 +1,6 @@
 #include "simple_builder.h"
 
-#include "graph_builder.h"
+#include "core/graph_builder.h"
 
 #include "log/log.h"
 
@@ -71,7 +71,7 @@ struct BuildState {
     std::vector<size_t> outputs;
     std::vector<int64_t> values;
     std::vector<bool> negated;
-    explicit BuildState(size_t nodeCount) {
+    explicit BuildState(size_t nodeCount) : g(1) {
         outputs.reserve(nodeCount);
         negated.reserve(nodeCount);
         values.reserve(nodeCount);

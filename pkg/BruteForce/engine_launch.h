@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bruteforce/beta_ext.h"
 #include "bruteforce/params.h"
 #include "bruteforce/topology.h"
 
@@ -12,6 +13,8 @@ struct EngineParams {
     // TODO - remove
     size_t maxExplicitNodeCount;
     std::function<void()> progressListener;
+    // required when engine is beta
+    BetaExtensions const* betaExt;
 
     explicit EngineParams(EvalConfig const& c) : config(c) {} 
 };
