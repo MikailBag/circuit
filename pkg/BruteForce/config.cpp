@@ -28,13 +28,8 @@ void EvalEngineConfig::Beta::Postprocess() {
 
 void EvalEngineConfig::Beta::PrintTopology::Postprocess() {
     if (!enabled) {
-        if (x != 0 || y != 0 || wellKnown) {
-            throw conf::BindingException("x or y can not be set when enabled is false");
-        }
-    }
-    if (wellKnown) {
         if (x != 0 || y != 0) {
-            throw conf::BindingException("x or y can not be set when well_known is true");
+            throw conf::BindingException("x or y can not be set when enabled is false");
         }
     }
 }

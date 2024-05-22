@@ -4,6 +4,7 @@
 #include <utility>
 #include <vector>
 
+namespace bf::beta {
 namespace {
 
 std::vector<std::pair<int64_t, int64_t>> WELL_KNOWN = []{
@@ -33,7 +34,7 @@ std::vector<std::pair<int64_t, int64_t>> WELL_KNOWN = []{
 
 }
 
-ssize_t IsWellKnown(int64_t x, int64_t y) {
+ssize_t detail::WellKnown::IsWellKnown(int64_t x, int64_t y) {
     auto it = std::lower_bound(WELL_KNOWN.begin(), WELL_KNOWN.end(), x, [](auto x, auto y) {
         return x.first < y;
     });
@@ -44,4 +45,9 @@ ssize_t IsWellKnown(int64_t x, int64_t y) {
         return -1;
     }
     return it - WELL_KNOWN.begin();
+}
+
+size_t detail::WellKnown::MaxIndex() {
+    return WELL_KNOWN.size();
+}
 }

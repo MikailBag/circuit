@@ -14,6 +14,7 @@
 #include <functional>
 #include <span>
 #include <stdexcept>
+#include <unordered_set>
 #include <utility>
 
 
@@ -106,25 +107,34 @@ struct State {
 
 };
 
-template<size_t N>
-void FindTopologyOutputsImpl(State<N> const& s, Topology const& t, bs::BitSet<N>& ans, std::span<std::array<int64_t, N>> buf, size_t pos) {
+template<class Out, size_t N>
+concept OutputCallback = 
+    // std::is_same_v<typeof(Out::SupportsSecondOutput), bool> &&
+    requires(Out out, std::array<int64_t, N> res, ssize_t wkIndex) {
+    { out.RecordOutput(res) } -> std::same_as<void>;
+    { out.RecordSecondOutput(res, wkIndex) } -> std::same_as<void>;
+};
+
+template<size_t N, OutputCallback<N> Out>
+void FindTopologyOutputsImpl(State<N> const& s, Topology const& t, Out& out, std::span<std::array<int64_t, N>> buf, size_t pos) {
     static_assert(N == 1 || N == 2, "Unsupported N");
     size_t maxVal = 1 << static_cast<size_t>(s.bits);
     bool isSink = pos == N + t.nodes.size() - 1;
     bool isPotentialSecondOutput = (t.nodes.size() >= 2) && (pos == N + t.nodes.size() - 2);
-    auto push = [pos, isSink, isPotentialSecondOutput, maxVal, buf, t = std::cref(t), s = &s, ans = std::ref(ans)](std::array<int64_t, N> res){
+    auto push = [pos, isSink, isPotentialSecondOutput, maxVal, buf, t = std::cref(t), s = &s, out = &out](std::array<int64_t, N> res){
         if (AbsMax(res) > maxVal) {
             return;
         }
         if (isSink) {
-            if (s->enableSecondOutputFilter) {
+            ssize_t wellKnownIndex = SSIZE_MAX;
+            if (Out::SupportsSecondOutput && s->enableSecondOutputFilter) {
                 std::array<int64_t, N> prevRes = buf[pos-1];
                 if (s->wellKnown) {
                     assert(N == 2);
-                    ssize_t idx = IsWellKnown(prevRes[0], prevRes[1]);
-                    if (idx < 0) {
-                        idx = IsWellKnown(res[0], res[1]);
-                        if (idx < 0) {
+                    wellKnownIndex = IsWellKnown(prevRes[0], prevRes[1]);
+                    if (wellKnownIndex < 0) {
+                        wellKnownIndex = IsWellKnown(res[0], res[1]);
+                        if (wellKnownIndex < 0) {
                             return;
                         }
                         res = prevRes;
@@ -143,7 +153,11 @@ void FindTopologyOutputsImpl(State<N> const& s, Topology const& t, bs::BitSet<N>
                     buf[pos] = res;
                     s->topologyPrinter(Restore(t, buf.subspan(0, t.get().nodes.size() + N)));
                 }
-                ans.get().PutArr(true, ToIndex(res));
+                if (Out::SupportsSecondOutput && s->enableSecondOutputFilter && s->wellKnown) {
+                    out->RecordSecondOutput(res, wellKnownIndex);
+                } else {
+                    out->RecordOutput(res);
+                }
                 res = MulBy2(res);
                 uint64_t mx = AbsMax(res);
                 if (mx == 0 || mx > maxVal) {
@@ -152,7 +166,7 @@ void FindTopologyOutputsImpl(State<N> const& s, Topology const& t, bs::BitSet<N>
             }
         } else {
             buf[pos] = res;
-            FindTopologyOutputsImpl<N>(*s, t, ans, buf, pos+1);
+            FindTopologyOutputsImpl<N, Out>(*s, t, *out, buf, pos+1);
         }
     };
 
@@ -185,6 +199,60 @@ void FindTopologyOutputsImpl(State<N> const& s, Topology const& t, bs::BitSet<N>
     }
    
 }
+
+template<size_t N>
+class SimpleOutputCallback {
+public:
+    explicit SimpleOutputCallback(bs::BitSet<N>& out) : mOut(out) {
+    }
+
+    void RecordOutput(std::array<int64_t, N> res) {
+        mOut.PutArr(true, ToIndex(res));
+    }
+
+    inline constexpr static bool SupportsSecondOutput = false;
+
+    void RecordSecondOutput([[maybe_unused]] std::array<int64_t, N> res, [[maybe_unused]] ssize_t idx) {
+        assert(false);
+    }
+private:
+    bs::BitSet<N>& mOut;
+};
+
+template<size_t N>
+struct ArrayHasher {
+public:
+    size_t operator()(std::array<int64_t, N> arr) const noexcept {
+        if (N == 1) {
+            return std::bit_cast<size_t>(arr[0]);
+        }
+        if (N == 2) {
+            size_t x = std::bit_cast<size_t>(arr[0]);
+            size_t y = std::bit_cast<size_t>(arr[1]);
+            return (x << 1) | y;
+        }
+        assert(N == 1 || N == 2);
+    }
+
+};
+
+template<size_t N>
+class ExpensiveOutputCallback {
+public:
+    explicit ExpensiveOutputCallback(size_t wkCount) : mBufs(wkCount) {}
+    void RecordOutput([[maybe_unused]] std::array<int64_t, N> res) {
+        assert(false);
+    }
+
+    inline constexpr static bool SupportsSecondOutput = true;
+
+    void RecordSecondOutput(std::array<int64_t, N> res, ssize_t idx) {
+        mBufs[idx].insert(res);
+    }
+private:
+    std::vector<std::unordered_set<std::array<int64_t, N>, ArrayHasher<N>>> mBufs;
+};
+
 }
 
 template<size_t N>
@@ -199,22 +267,25 @@ void FindAllOutputsBulk(EvalConfig::Settings const& settings, std::function<void
         }
         if (!conf.forceDummy) {
             State<N> s;
-            if (settings.secondOutput.isEnabled) {
+            if (settings.secondOutput.isSingle || settings.secondOutput.isWellKnown) {
                 s.enableSecondOutputFilter = true;
+                if (settings.secondOutput.isWellKnown) {
+                    s.wellKnown = true;
+                } else {
                 if constexpr (N == 1) {
-                    s.expectedSecondOutput = {settings.secondOutput.enabled.x};
+                    s.expectedSecondOutput = {settings.secondOutput.single.x};
                 } else if (N == 2) {
-                    s.expectedSecondOutput = {settings.secondOutput.enabled.x, settings.secondOutput.enabled.y};
+                    s.expectedSecondOutput = {settings.secondOutput.single.x, settings.secondOutput.single.y};
                 } else {
                     assert(false);
+                }
+
                 }
             }
             if (conf.printTopology.enabled) {
                 s.enablePrintTopology = true;
                 s.topologyPrinter = ext.topologyPrinter;
-                if (conf.printTopology.wellKnown) {
-                    s.wellKnown = true;
-                } else {
+                
                 s.expectedOutput = {};
                 if constexpr (N == 1) {
                     s.expectedOutput = {conf.printTopology.x};
@@ -223,12 +294,15 @@ void FindAllOutputsBulk(EvalConfig::Settings const& settings, std::function<void
                 } else {
                     assert(false);
                 }
-                }
             }
             s.bits = settings.maxBits;
-            
-            
-            FindTopologyOutputsImpl<N>(s, t, out, bufView, 0);
+            if (settings.secondOutput.isWellKnown) {
+                ExpensiveOutputCallback<N> cb {MaxIndex()};
+                FindTopologyOutputsImpl<N>(s, t, cb, bufView, 0);
+            } else {
+                SimpleOutputCallback<N> cb {out};
+                FindTopologyOutputsImpl<N>(s, t, cb, bufView, 0);
+            }
         }
         if (func) {
             func();

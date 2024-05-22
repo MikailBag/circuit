@@ -90,8 +90,8 @@ TEST_CASE("Finds outputs of a bit more complex scheme", "[bruteforce][bruteforce
 TEST_CASE("Finds two-output topology", "[bruteforce][bruteforce/outputs][bruteforce/outputs/second]") {
     bf::EvalConfig evalConf = CONFIG_BETA;
     evalConf.settings.maxBits = 4;
-    evalConf.settings.secondOutput.isEnabled = true;
-    evalConf.settings.secondOutput.enabled.x = 5;
+    evalConf.settings.secondOutput.isSingle = true;
+    evalConf.settings.secondOutput.single.x = 5;
     bf::LaunchConfig lc;
     bf::EvalParams p {evalConf, lc};
     p.maxExplicitNodeCount = 2;
@@ -120,8 +120,8 @@ TEST_CASE("Finds two-output topology", "[bruteforce][bruteforce/outputs][brutefo
 TEST_CASE("Respects two-output filter", "[bruteforce][bruteforce/outputs][bruteforce/outputs/second]") {
     bf::EvalConfig evalConf = CONFIG_BETA;
     evalConf.settings.maxBits = 5;
-    evalConf.settings.secondOutput.isEnabled = true;
-    evalConf.settings.secondOutput.enabled.x = 21;
+    evalConf.settings.secondOutput.isSingle = true;
+    evalConf.settings.secondOutput.single.x = 21;
     bf::LaunchConfig lc;
     bf::EvalParams p {evalConf, lc};
     p.maxExplicitNodeCount = 2;

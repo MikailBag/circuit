@@ -115,7 +115,7 @@ void InvokeEngineImpl(Engine const& engine, std::vector<Topology> const& topolog
 }
 
 void InvokeEngine(EngineParams const& ep, LaunchConfig const& lp, std::vector<Topology> const& topologies, bs::BitSet<1>* out1, bs::BitSet<2>* out2) {
-    if (ep.config.settings.secondOutput.isEnabled) {
+    if (!ep.config.settings.secondOutput.isDisabled) {
         if (ep.config.engine.isAlpha) {
             throw std::invalid_argument("second output not available for broken alpha engine");
         }

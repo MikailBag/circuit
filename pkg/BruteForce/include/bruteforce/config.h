@@ -19,14 +19,12 @@ struct EvalEngineConfig : public conf::Target {
     struct Beta : public conf::Target {
         struct PrintTopology : public conf::Target {
             bool enabled = false;
-            bool wellKnown = false;
             int64_t x = 0;
             int64_t y = 0;
 
             void Describe(conf::Description& desc) override {
                 desc.Object()
                     .BoolField("enabled", enabled)
-                    .BoolField("well_known", wellKnown)
                     .NumField("x", x)
                     .NumField("y", y);
             }
@@ -66,9 +64,10 @@ struct EvalEngineConfig : public conf::Target {
 };
 
 struct SecondOutput : public conf::Target {
-    struct Enabled : public conf::Target {
+    struct Single : public conf::Target {
         int64_t x = 0;
         int64_t y = 0;
+        bool wellKnown = false;
 
         void Describe(conf::Description& desc) override {
             desc.Object()
@@ -80,17 +79,23 @@ struct SecondOutput : public conf::Target {
         }
     };
 
+
     bool isDisabled = false;
-    Enabled enabled;
-    bool isEnabled = false;
+    Single single;
+    bool isSingle = false;
+    bool isWellKnown = false;
 
     void Describe(conf::Description& desc) override {
         desc.Enum()
             .SimpleVariant("disabled", isDisabled)
-            .Variant("enabled", isEnabled, enabled);
+            .Variant("single", isSingle, single)
+            .SimpleVariant("well_known", isWellKnown);
     }
 
     void Postprocess() override {
+        if (!isSingle && !isWellKnown && !isDisabled) {
+            isDisabled = true;
+        }
     }
 };
 
